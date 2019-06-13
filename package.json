@@ -1,0 +1,28 @@
+{
+  "name": "arrival-backend",
+  "version": "1.0.0",
+  "description": "The backend for Arrival, the smarter, faster way to coordinate BART schedules",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/ronan18/arrival-backend.git"
+  },
+  "keywords": [
+    "BART"
+  ],
+  "author": "Ronan18",
+  "license": "Apache-2.0",
+  "bugs": {
+    "url": "https://github.com/ronan18/arrival-backend/issues"
+  },
+  "homepage": "https://github.com/ronan18/arrival-backend#readme",
+  "dependencies": {
+    "express": "^4.17.1",
+    "firebase-admin": "^8.1.0",
+    "node-fetch": "^2.6.0",
+    "socket.io": "^2.2.0"
+  }
+}
