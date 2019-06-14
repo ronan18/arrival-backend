@@ -175,7 +175,9 @@ async function update(socket, connectedUser) {
 }
 
 app.get('/', function (req, res) {
-  res.redirect('https://arrival.stomprocket.io');
+  res.status(200)
+  res.send('API')
+  res.end()
 });
 app.post('/api/v1/suggestions/from', function (req, res) {
   console.log(req.headers.authorization, req.body)
@@ -269,7 +271,7 @@ io.on('connection', function (socket) {
     db.collection('accounts').doc(pass).get().then(user => {
       socket.emit('passphraseValid', user.exists)
       if (user.exists) {
-        socket.emit('apiKey', {key: apiKey, url: 'http://localhost:3000'})
+        socket.emit('apiKey', {key: apiKey, url: 'https://api.arrival.stomprocket.io'})
         console.log('validated passphrase')
         connectedUser.data = user.data()
         connectedUser.data.lastseen = admin.firestore.Timestamp.fromDate(new Date())
