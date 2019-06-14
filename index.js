@@ -59,8 +59,8 @@ async function getTrains(connectedUser) {
         }
         etaTime = etaMomentTime.format('k:mm')
 
-        const etd = {value: etdTime, unit: 'min'};
-        const eta = {value: root['@destTimeMin'], unit: 'min'};
+        const etd = {value: root['@origTimeMin'], unit: false};
+        const eta = {value: etaTime, unit: false};
         let route = root.leg[0]['@line'].slice(-1)
         let routeInfo = {}
         fetch(`http://api.bart.gov/api/route.aspx?cmd=routeinfo&route=${route}&key=MW9S-E7SL-26DU-VV8V&json=y`).then(res => res.json()).then(routeData => {
