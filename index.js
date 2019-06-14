@@ -53,13 +53,13 @@ async function getTrains(connectedUser) {
         let etaMomentTime = moment(etaTimeString)
         if (momentTime.isValid()) {
           console.log('time valid', timeString)
-          etdTime = moment().diff(momentTime, 'minutes')
+          etdTime = momentTime.format('k:mm')
         } else {
           console.log('time invalid', timeString)
         }
         etaTime = etaMomentTime.format('k:mm')
 
-        const etd = {value: root['@origTimeMin'], unit: false};
+        const etd = {value: etdTime, unit: false};
         const eta = {value: etaTime, unit: false};
         let route = root.leg[0]['@line'].slice(-1)
         let routeInfo = {}
