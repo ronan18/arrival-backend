@@ -1,6 +1,6 @@
 {
   "name": "arrival-backend",
-  "version": "1.0.0",
+  "version": "0.0.1",
   "description": "The backend for Arrival, the smarter, faster way to coordinate BART schedules",
   "main": "index.js",
   "scripts": {
@@ -20,8 +20,13 @@
   },
   "homepage": "https://github.com/ronan18/arrival-backend#readme",
   "dependencies": {
+    "body-parser": "^1.19.0",
+    "brain.js": "^1.6.1",
+    "cors": "^2.8.5",
     "express": "^4.17.1",
     "firebase-admin": "^8.1.0",
+    "hat": "0.0.3",
+    "moment": "^2.24.0",
     "node-fetch": "^2.6.0",
     "socket.io": "^2.2.0"
   }

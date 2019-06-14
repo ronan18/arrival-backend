@@ -3,7 +3,18 @@ const http = require('http').createServer(app);
 const io = require('socket.io')(http);
 const admin = require("firebase-admin");
 const fetch = require('node-fetch')
+const hat = require('hat');
+const apiKey = hat();
+const cors = require('cors')
+const bodyParser = require('body-parser')
+const brain = require('brain.js')
+const moment = require('moment')
+app.use(cors())
 io.origins('*:*')
+app.use(bodyParser.urlencoded({extended: false}))
+
+// parse application/json
+app.use(bodyParser.json())
 const serviceAccount = require("./private/firebasekey.json");
 
 function distance(lat1, lon1, lat2, lon2) {
@@ -22,32 +33,119 @@ function distance(lat1, lon1, lat2, lon2) {
   return dist * 1.609344
 }
 
-async function getTrains(station) {
+async function getTrains(connectedUser) {
+  const station = connectedUser.appData.fromStation.abbr
+  const destination = connectedUser.appData.toStation.abbr
+  // console.log(station, destination)
   let trainList = []
-  await fetch(`http://api.bart.gov/api/etd.aspx?cmd=etd&orig=${station}&key=MW9S-E7SL-26DU-VV8V&json=y`, {method: 'get'}).then(res => res.json()).then(trains => {
-    //console.log(trains.root.station[0].etd)
-    let list = []
-    trains.root.station[0].etd.forEach((place) => {
-      place.estimate.forEach(train => {
-        let etd = {value: train.minutes, unit: 'min'};
-        if (etd.value === 'Leaving') {
-          etd.unit = false
+  if (station && destination) {
+    //console.log('arrival and desitination')
+    await fetch(`http://api.bart.gov/api/sched.aspx?cmd=depart&orig=${station}&dest=${destination}&date=now&key=MW9S-E7SL-26DU-VV8V&a=4&b=0&json=y`, {method: 'get'}).then(res => res.json()).then(trains => {
+      let list = trains.root.schedule.request.trip
+      // console.log(list)
+
+      trainList = list.map(function (root) {
+        let etdTime = root['@origTimeMin']
+        let etaTime = root['@destTimeMin']
+        const timeString = root['@origTimeDate'] + ' ' + etdTime
+        const etaTimeString = root['@destTimeDate'] + ' ' + etaTime
+        let momentTime = moment(timeString)
+        let etaMomentTime = moment(etaTimeString)
+        if (momentTime.isValid()) {
+          console.log('time valid', timeString)
+          etdTime = moment().diff(momentTime, 'minutes')
+        } else {
+          console.log('time invalid', timeString)
         }
-        list.push({
-          destination: place.destination,
-          abbr: place.abbreviation,
-          limited: place.limited,
-          etd: {value: train.minutes, unit: 'min'},
-          platform: train.platform,
-          color: train.color,
-          direction: train.direction,
-          cars: train.length
+        etaTime = etaMomentTime.format('k:mm')
+
+        const etd = {value: etdTime, unit: 'min'};
+        const eta = {value: etaTime, unit: false};
+        let route = root.leg[0]['@line'].slice(-1)
+        let routeInfo = {}
+        fetch(`http://api.bart.gov/api/route.aspx?cmd=routeinfo&route=${route}&key=MW9S-E7SL-26DU-VV8V&json=y`).then(res => res.json()).then(routeData => {
+          routeInfo = routeData.root.routes.route
+          console.log('routeInfo updated')
+          return routeInfo
         })
+        // console.log(route)
+        let transfers = false
+        if (root.leg.length > 1) {
+          transfers = true
+        }
+        /* console.log({
+           destination: root.leg[0]['@trainHeadStation'],
+           abbr: root.leg[0]['@destination'],
+           etd: etd,
+           eta: eta,
+           transfers: transfers,
+           //platform: train.platform,
+           color: routeInfo.color,
+           direction: routeInfo.direction,
+           //cars: train.length
+         })*/
+        return {
+          destination: root.leg[0]['@trainHeadStation'],
+          abbr: root.leg[0]['@destination'],
+          etd: etd,
+          eta: eta,
+          transfers: transfers,
+          unix: momentTime.unix(),
+          //platform: train.platform,
+          color: routeInfo.color,
+          direction: routeInfo.direction,
+          //cars: train.length
+        }
+      })
+      return trainList.sort((a, b) => {
+        return b.unix - a.unix
       })
     })
-    trainList = list
+  } else {
+    await fetch(`http://api.bart.gov/api/etd.aspx?cmd=etd&orig=${station}&key=MW9S-E7SL-26DU-VV8V&json=y`, {method: 'get'}).then(res => res.json()).then(trains => {
+      console.log(trains.root.station[0].etd)
+      if (trains.root.station[0].etd) {
+        let list = []
+        trains.root.station[0].etd.forEach((place) => {
+          place.estimate.forEach(train => {
+            let etd = {value: train.minutes, unit: 'min'};
+            if (etd.value == 'Leaving') {
+              etd.unit = false
+            }
+            list.push({
+              destination: place.destination,
+              abbr: place.abbreviation,
+              limited: place.limited,
+              etd: etd,
+              platform: train.platform,
+              color: train.color,
+              direction: train.direction,
+              cars: train.length
+            })
+          })
+        })
+        trainList = list
 
-  })
+        trainList.sort((a, b) => {
+          let compareA = a.etd.value
+          if (a.etd.value == 'Leaving') {
+            compareA = 0
+          }
+          let compareB = b.etd.value
+          if (b.etd.value == 'Leaving') {
+            compareB = 0
+          }
+          return compareA - compareB
+        })
+      } else {
+        trainList = 0;
+      }
+
+
+    })
+  }
+
+
   // console.log(trainList)
   return trainList
 
@@ -63,18 +161,115 @@ fetch('http://api.bart.gov/api/stn.aspx?cmd=stns&key=MW9S-E7SL-26DU-VV8V&json=y'
   bartList = list.root.stations.station
 
 })
+
+async function update(socket, connectedUser) {
+  const trains = await getTrains(connectedUser)
+  connectedUser.appData.trains = trains
+  console.log('from station', connectedUser.appData.fromStation.name)
+  socket.emit('appData', connectedUser.appData)
+  console.log('sent update')
+  connectedUser.appData.trains = trains
+  //console.log(connectedUser.appData.trains, 'trains updated')
+
+
+}
+
 app.get('/', function (req, res) {
   res.redirect('https://arrival.stomprocket.io');
 });
+app.post('/api/v1/suggestions/from', function (req, res) {
+  console.log(req.headers.authorization, req.body)
+  const auth = req.headers.authorization
+  if (auth == apiKey) {
+    const pass = req.body.passphrase
+    const location = req.body.position
+
+    if (pass && location) {
+      db.collection('accounts').doc(pass).get().then(user => {
+        if (user.exists) {
+          let stations = bartList.map((station) => {
+            station.distance = distance(station.gtfs_latitude, station.gtfs_longitude, location.coords.lat, location.coords.long)
+            return station
+          })
+          nearestStations = stations.sort(function (a, b) {
+            return a.distance - b.distance
+          });
+          res.status(200)
+          res.json(stations)
+          res.end()
+        } else {
+          res.status(400)
+          res.end()
+        }
+      })
+    } else {
+      res.status(400)
+      res.end()
+    }
+
+  } else {
+    res.status(401)
+    res.end()
+  }
+
+
+});
+app.post('/api/v1/suggestions/to', function (req, res) {
+  console.log(req.headers.authorization, req.body)
+  const auth = req.headers.authorization
+  if (auth == apiKey) {
+    const pass = req.body.passphrase
+    const location = req.body.position
+
+    if (pass && location) {
+      db.collection('accounts').doc(pass).get().then(user => {
+        if (user.exists) {
+          let stations = bartList.map((station) => {
+            station.distance = distance(station.gtfs_latitude, station.gtfs_longitude, location.coords.lat, location.coords.long)
+            return station
+          })
+          nearestStations = stations.sort(function (a, b) {
+            return a.distance - b.distance
+          });
+          nearestStations.unshift({
+            'name': 'none'
+          })
+          res.status(200)
+          res.json(stations)
+          res.end()
+        } else {
+          res.status(400)
+          res.end()
+        }
+      })
+    } else {
+      res.status(400)
+      res.end()
+    }
+
+  } else {
+    res.status(401)
+    res.end()
+  }
+
+
+});
 io.on('connection', function (socket) {
-  let connectedUser = {appData: {}}
+  //console.log(apiKey, 'apiKey')
+  let connectedUser = {appData: {}, suggestions: {type: false, items: []}}
+  let trainUpdate = false
   console.log('a user connected');
-  socket.on('passphrase', (pass) => {
+  const opened = Date.now()
+
+  socket.on('passphrase', (package) => {
+    const pass = package.pass
+    connectedUser.clientVersion = package.version
     console.log('passphrase recived', pass)
     connectedUser.passphrase = pass
     db.collection('accounts').doc(pass).get().then(user => {
       socket.emit('passphraseValid', user.exists)
       if (user.exists) {
+        socket.emit('apiKey', {key: apiKey, url: 'http://localhost:3000'})
         console.log('validated passphrase')
         connectedUser.data = user.data()
         connectedUser.data.lastseen = admin.firestore.Timestamp.fromDate(new Date())
@@ -94,7 +289,8 @@ io.on('connection', function (socket) {
       return a.distance - b.distance
     });
     connectedUser.appData.fromStation = {
-      name: connectedUser.nearestStations[0].name
+      name: connectedUser.nearestStations[0].name,
+      abbr: connectedUser.nearestStations[0].abbr
     }
     connectedUser.appData.calcTime = {
       type: 'leave',
@@ -103,21 +299,32 @@ io.on('connection', function (socket) {
     connectedUser.appData.toStation = false;
 
     (async function () {
-      connectedUser.appData.trains = await getTrains(connectedUser.nearestStations[0].abbr)
-      console.log(connectedUser.appData.trains)
+      connectedUser.appData.trains = await getTrains(connectedUser)
+      // console.log(connectedUser.appData.trains)
       socket.emit('appData', connectedUser.appData)
+      console.log('sent inital app data')
+      const initialState = Date.now()
+      const loadTime = initialState - opened
+      db.collection('analytics').add({
+        loadTime: loadTime,
+        appData: connectedUser.appData,
+        clientVersion: connectedUser.clientVersion,
+        serverVersion: require('./package.json').version,
+        timeStamp: admin.firestore.Timestamp.fromDate(new Date())
+      })
+      console.log('updated analytics', loadTime)
     })();
 
 
-    let trainUpdate = setInterval(() => {
+    trainUpdate = setInterval(() => {
       (async function () {
-        const trains = await getTrains(connectedUser.nearestStations[0].abbr)
+        const trains = await getTrains(connectedUser)
         if (connectedUser.appData.trains[0].etd.value !== trains[0].etd.value) {
           connectedUser.appData.trains = trains
           //console.log(connectedUser.appData.trains, 'trains updated')
           socket.emit('trainsUpdate', connectedUser.appData.trains)
         } else {
-         // console.log('trains the same')
+          // console.log('trains the same')
         }
 
       })();
@@ -125,8 +332,29 @@ io.on('connection', function (socket) {
 
 
   })
+
+
+  socket.on('setFromStation', station => {
+    connectedUser.appData.fromStation = station
+    console.log('setting from station', connectedUser.appData.fromStation.name, `${connectedUser.passphrase}_updateApp`)
+    //console.log('from station', connectedUser.appData.fromStation)
+    update(socket, connectedUser)
+  })
+  socket.on('setToStation', station => {
+    if (station.name === 'none') {
+      connectedUser.appData.toStation = false
+    } else {
+      connectedUser.appData.toStation = station
+    }
+
+    console.log('setting to station', connectedUser.appData.toStation.name, `${connectedUser.passphrase}_updateApp`)
+    //console.log('from station', connectedUser.appData.fromStation)
+
+    update(socket, connectedUser)
+  })
   socket.on('disconnect', function () {
     console.log('user disconnected');
+    clearInterval(trainUpdate)
   });
 });
 http.listen(3000, function () {
