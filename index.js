@@ -9,6 +9,8 @@ const cors = require('cors')
 const bodyParser = require('body-parser')
 const brain = require('brain.js')
 const moment = require('moment')
+//const apiData = {url: 'https://api.arrival.stomprocket.io', key: '51c2a8160c8e8dedf86698d51159f5a1', /*key: apiKey*/}
+const apiData = {url: 'https://api.arrival.stomprocket.io', key: apiKey}
 app.use(cors())
 io.origins('*:*')
 app.use(bodyParser.urlencoded({extended: false}))
@@ -166,7 +168,32 @@ async function update(socket, connectedUser) {
   const trains = await getTrains(connectedUser)
   connectedUser.appData.trains = trains
   console.log('from station', connectedUser.appData.fromStation.name)
+  if (connectedUser.appData.fromStation.name === '12th St. Oakland City Center') {
+    connectedUser.appData.fromStation.name = '12th St.'
+  }
+  if (connectedUser.appData.fromStation.name === '19th St. Oakland') {
+    connectedUser.appData.fromStation.name = '19th St.'
+  }
+  if (connectedUser.appData.fromStation.name === '24th St. Mission') {
+    connectedUser.appData.fromStation.name = '24th St.'
+  }
+  if (connectedUser.appData.fromStation.name === '16th St. Mission') {
+    connectedUser.appData.fromStation.name = '16th St.'
+  }
+  if (connectedUser.appData.fromStation.name === 'San Francisco International Airport') {
+    connectedUser.appData.fromStation.name = 'SFO'
+  }
+  if (connectedUser.appData.fromStation.name === 'Oakland International Airport') {
+    connectedUser.appData.fromStation.name = 'OAK'
+  }
+  if (connectedUser.appData.fromStation.name === 'Pleasant Hill/Contra Costa Centre') {
+    connectedUser.appData.fromStation.name = 'Pleasant Hill'
+  }
+  if (connectedUser.appData.fromStation.name === 'Civic Center/UN Plaza') {
+    connectedUser.appData.fromStation.name = 'Civic Center'
+  }
   socket.emit('appData', connectedUser.appData)
+  socket.emit('apiKey', apiData)
   console.log('sent update')
   connectedUser.appData.trains = trains
   //console.log(connectedUser.appData.trains, 'trains updated')
@@ -271,7 +298,7 @@ io.on('connection', function (socket) {
     db.collection('accounts').doc(pass).get().then(user => {
       socket.emit('passphraseValid', user.exists)
       if (user.exists) {
-        socket.emit('apiKey', {key: apiKey, url: 'https://api.arrival.stomprocket.io'})
+        socket.emit('apiKey', apiData)
         console.log('validated passphrase')
         connectedUser.data = user.data()
         connectedUser.data.lastseen = admin.firestore.Timestamp.fromDate(new Date())
@@ -303,6 +330,7 @@ io.on('connection', function (socket) {
     (async function () {
       connectedUser.appData.trains = await getTrains(connectedUser)
       // console.log(connectedUser.appData.trains)
+
       socket.emit('appData', connectedUser.appData)
       console.log('sent inital app data')
       const initialState = Date.now()
@@ -334,7 +362,9 @@ io.on('connection', function (socket) {
 
 
   })
-
+  socket.on('requestApiKey', () => {
+    socket.emit('apiKey', apiData)
+  })
 
   socket.on('setFromStation', station => {
     connectedUser.appData.fromStation = station
