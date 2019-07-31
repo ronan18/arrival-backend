@@ -100,7 +100,7 @@ async function getTrains(connectedUser) {
         }
       })
       return trainList.sort((a, b) => {
-        return b.unix - a.unix
+        return a.unix - b.unix
       })
     })
   } else {
