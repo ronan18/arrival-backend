@@ -403,7 +403,7 @@ io.on('connection', function (socket) {
         },
         time: {
           utc: utc,
-          day: moment(utc).format('dddd'),
+          day: moment(utc).format('d'),
           month: moment(utc).format('M'),
           hour: moment(utc).format('HH'),
           minute: moment(utc).format('mm'),

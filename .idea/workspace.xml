@@ -2,6 +2,7 @@
 <project version="4">
   <component name="ChangeListManager">
     <list default="true" id="5c620a9c-0115-4826-96b3-4a367540869d" name="Default Changelist" comment="">
+      <change afterPath="$PROJECT_DIR$/ai.js" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/index.js" beforeDir="false" afterPath="$PROJECT_DIR$/index.js" afterDir="false" />
     </list>
@@ -10,18 +11,6 @@
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
     <option name="HIGHLIGHT_NON_ACTIVE_CHANGELIST" value="false" />
     <option name="LAST_RESOLUTION" value="IGNORE" />
-  </component>
-  <component name="FindInProjectRecents">
-    <findStrings>
-      <find>bartlist =</find>
-      <find>getTrains</find>
-      <find>url</find>
-      <find>url:</find>
-      <find>apiKey</find>
-      <find>apikey'</find>
-      <find>socket.emit('apiKey',</find>
-      <find>plea</find>
-    </findStrings>
   </component>
   <component name="Git.Settings">
     <option name="RECENT_GIT_ROOT_PATH" value="$PROJECT_DIR$" />
@@ -58,7 +47,7 @@
       <updated>1560375320560</updated>
       <workItem from="1560375321787" duration="33248000" />
       <workItem from="1562637144952" duration="118000" />
-      <workItem from="1564534925030" duration="1923000" />
+      <workItem from="1564534925030" duration="3598000" />
     </task>
     <servers />
   </component>
