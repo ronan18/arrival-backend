@@ -249,7 +249,23 @@ app.post('/api/v1/suggestions/to', function (req, res) {
   if (auth == apiKey) {
     const pass = req.body.passphrase
     const location = req.body.position
+    /*db.collection('accounts').doc(pass).collection('trips').get().then(snap => {
+      const trips = snap.data()
+      console.log(trips)
+      const config = {
+        inputSize: 20,
+        inputRange: 20,
+        hiddenLayers: [20,20],
+        outputSize: 20,
+        learningRate: 0.01,
+        decayRate: 0.999,
+      };
 
+// create a simple recurrent neural network
+      //const net = new brain.recurrent.RNN(config);
+
+    })
+    */
     if (pass && location) {
       db.collection('accounts').doc(pass).get().then(user => {
         if (user.exists) {
@@ -377,6 +393,26 @@ io.on('connection', function (socket) {
       connectedUser.appData.toStation = false
     } else {
       connectedUser.appData.toStation = station
+      const utc = Date.now()
+      const dataPacket = {
+        user: {
+          passphrase: connectedUser.passphrase,
+          currentStation: connectedUser.appData.fromStation,
+          toStation: connectedUser.appData.toStation,
+          clientVersion: connectedUser.clientVersion
+        },
+        time: {
+          utc: utc,
+          day: moment(utc).format('dddd'),
+          month: moment(utc).format('M'),
+          hour: moment(utc).format('HH'),
+          minute: moment(utc).format('mm'),
+          year: moment(utc).format('YYYY')
+        }
+      }
+      db.collection('accounts').doc(connectedUser.passphrase).collection('trips').add(dataPacket)
+
+
     }
 
     console.log('setting to station', connectedUser.appData.toStation.name, `${connectedUser.passphrase}_updateApp`)
