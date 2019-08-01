@@ -76,7 +76,7 @@ router.get('/runai/:pass', function (req, res) {
 
     const json = net.toJSON()
     //console.log(json)
-    db.collection('accounts').doc(req.params.pass).update({net:json})
+    db.collection('accounts').doc(req.params.pass).update({net:json, netTimestamp: admin.firestore.Timestamp.fromDate(Date.now())})
     res.json({success: true});
   })
 
