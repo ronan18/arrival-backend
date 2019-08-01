@@ -20,9 +20,9 @@ findStationCode = (abbr) => {
   return stationList.indexOf(item[0])
 }
 convertStationCode = (code) => {
-  console.log('raw', code.abbr, (code.abbr*stationListConversion))
-  console.log('result', Math.round(code.abbr*stationListConversion))
-  return stationList[Math.round(code.abbr*stationListConversion)]
+  console.log('raw', code.abbr, (code.abbr * stationListConversion))
+  console.log('result', Math.round(code.abbr * stationListConversion))
+  return stationList[Math.round(code.abbr * stationListConversion)]
 }
 
 createTrainingData = (trips) => {
@@ -50,15 +50,17 @@ db.collection('accounts').doc("passphrase").collection('trips').get().then(snap 
   });
   console.log('trip data loaded')
   const config = {
-    hiddenLayers: [20, 20],
-    log: true,
-    logPeriod: 10
+    inputLayers: 3,
+    hiddenLayers: [4, 4]
   };
 
 // create a simple recurrent neural network
   let trainingData = createTrainingData(trips)
   //console.log(trainingData)
   const net = new brain.NeuralNetwork(config)
-  net.train(trainingData)
-  console.log(net.run(trainingData[trainingData.length-1].input))
+  net.train(trainingData, {
+    log: (error) => console.log(error),
+    logPeriod: 100
+  })
+  console.log(net.run(trainingData[trainingData.length - 1].input))
 })

@@ -62,22 +62,25 @@ router.get('/runai/:pass', function (req, res) {
     });
     console.log('trip data loaded')
     const config = {
-      hiddenLayers: [20, 20],
-      log: true,
-      logPeriod: 10
+     // inputLayers: 3,
+      hiddenLayers: [4, 4,4],
+      iterations: 10000
     };
 
 // create a simple recurrent neural network
     let trainingData = createTrainingData(trips)
     //console.log(trainingData)
     const net = new brain.NeuralNetwork(config)
-    net.train(trainingData)
-    //console.log(net.run(trainingData[trainingData.length - 1].input))
-    console.log('trained')
+    net.train(trainingData, {
+      log: (error) => console.log(error),
+      logPeriod: 1000
+    })
+   // console.log(net.run(trainingData[trainingData.length - 1].input))
+    console.log('trained', req.params.pass)
 
     const json = net.toJSON()
     //console.log(json)
-    db.collection('accounts').doc(req.params.pass).update({net:json, netTimestamp: FieldValue.serverTimestamp()})
+    db.collection('accounts').doc(req.params.pass).update({net: json, netTimestamp: FieldValue.serverTimestamp()})
     res.json({success: true});
   })
 
