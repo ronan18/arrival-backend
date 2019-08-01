@@ -8,6 +8,7 @@ const brain = require('brain.js')
 const moment = require('moment')
 const serviceAccount = require("./private/firebasekey.json");
 const fetch = require('node-fetch')
+let FieldValue = require('firebase-admin').firestore.FieldValue;
 admin.initializeApp({
   credential: admin.credential.cert(serviceAccount),
   databaseURL: "https://arrival-bart.firebaseio.com"
@@ -76,7 +77,7 @@ router.get('/runai/:pass', function (req, res) {
 
     const json = net.toJSON()
     //console.log(json)
-    db.collection('accounts').doc(req.params.pass).update({net:json, netTimestamp: admin.firestore.Timestamp.fromDate(Date.now())})
+    db.collection('accounts').doc(req.params.pass).update({net:json, netTimestamp: FieldValue.serverTimestamp()})
     res.json({success: true});
   })
 
