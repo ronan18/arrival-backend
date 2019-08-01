@@ -259,7 +259,7 @@ app.post('/api/v1/suggestions/from', function (req, res) {
 
 });
 app.post('/api/v1/suggestions/to', function (req, res) {
-  //console.log(req.headers.authorization, req.body)
+  console.log(req.body)
   const auth = req.headers.authorization
   if (auth == apiKey) {
     const pass = req.body.passphrase
