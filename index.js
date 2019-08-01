@@ -298,7 +298,7 @@ app.post('/api/v1/suggestions/to', function (req, res) {
         let resultsArray = []
         let resultStations = []
         for (const key in result) {
-          if (result.hasOwnProperty(key)) {
+          if (result.hasOwnProperty(key) && req.body.station.abbr !== key) {
             resultStations.push(key)
             const stationData = bartList.filter(obj => {
               return obj.abbr === key
@@ -312,7 +312,7 @@ app.post('/api/v1/suggestions/to', function (req, res) {
           return b.priority - a.priority
         })
         bartList.map(i => {
-          if (resultStations.indexOf(i.abbr) === -1) {
+          if (resultStations.indexOf(i.abbr) === -1 && req.body.station.abbr !== i.abbr) {
             resultsArray.push(i)
             return i
           }
