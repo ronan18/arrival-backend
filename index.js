@@ -9,6 +9,21 @@ const cors = require('cors')
 const bodyParser = require('body-parser')
 const brain = require('brain.js')
 const moment = require('moment')
+const stationList = require('./private/stationList');
+console.log(stationList.length)
+let stationListConversion = 100
+findStationCode = (abbr) => {
+  let item = stationList.filter(i => {
+    return i.abbr === abbr
+  })
+
+  return stationList.indexOf(item[0])
+}
+convertStationCode = (code) => {
+  console.log('raw', code.abbr, (code.abbr * stationListConversion))
+  console.log('result', Math.round(code.abbr * stationListConversion))
+  return stationList[Math.round(code.abbr * stationListConversion)]
+}
 //const apiData = {url: 'https://api.arrival.stomprocket.io', key: '51c2a8160c8e8dedf86698d51159f5a1', /*key: apiKey*/}
 const apiData = {url: 'https://api.arrival.stomprocket.io', key: apiKey}
 app.use(cors())
@@ -244,7 +259,7 @@ app.post('/api/v1/suggestions/from', function (req, res) {
 
 });
 app.post('/api/v1/suggestions/to', function (req, res) {
-  console.log(req.headers.authorization, req.body)
+  //console.log(req.headers.authorization, req.body)
   const auth = req.headers.authorization
   if (auth == apiKey) {
     const pass = req.body.passphrase
@@ -266,7 +281,51 @@ app.post('/api/v1/suggestions/to', function (req, res) {
 
     })
     */
+
     if (pass && location) {
+      db.collection('accounts').doc(pass).get().then(snap => {
+        const json = snap.data().net
+        const net = new brain.NeuralNetwork()
+        net.fromJSON(json);
+        const time = Date.now()
+        const result = net.run({
+          day: Number(parseInt(moment(time).format('d'), 10)) / 10,
+          hour: Number(parseInt(moment(time).format('HH'), 10)) / 100,
+          station: findStationCode(req.body.station.abbr) / 100
+        })
+        console.log(result)
+
+        let resultsArray = []
+        let resultStations = []
+        for (const key in result) {
+          if (result.hasOwnProperty(key)) {
+            resultStations.push(key)
+            const stationData = bartList.filter(obj => {
+              return obj.abbr === key
+            })[0]
+            stationData.priority = result[key]
+            resultsArray.push(stationData)
+          }
+        }
+
+        resultsArray = resultsArray.sort((a, b) => {
+          return b.priority - a.priority
+        })
+        bartList.map(i => {
+          if (resultStations.indexOf(i.abbr) === -1) {
+            resultsArray.push(i)
+            return i
+          }
+        })
+        resultsArray.unshift({
+          'name': 'none'
+        })
+        console.log(resultsArray)
+        res.status(200)
+        res.json(resultsArray)
+        res.end()
+      })
+      /*
       db.collection('accounts').doc(pass).get().then(user => {
         if (user.exists) {
           let stations = bartList.map((station) => {
@@ -287,6 +346,7 @@ app.post('/api/v1/suggestions/to', function (req, res) {
           res.end()
         }
       })
+      */
     } else {
       res.status(400)
       res.end()
@@ -410,7 +470,11 @@ io.on('connection', function (socket) {
           year: moment(utc).format('YYYY')
         }
       }
-      db.collection('accounts').doc(connectedUser.passphrase).collection('trips').add(dataPacket)
+      db.collection('accounts').doc(connectedUser.passphrase).collection('trips').add(dataPacket).then((e) => {
+        fetch('http://localhost:8082/api/runai/' + connectedUser.passphrase).then(res => res.json()).then(res => {
+          console.log(res)
+        })
+      })
 
 
     }
