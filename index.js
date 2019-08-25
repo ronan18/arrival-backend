@@ -12,6 +12,7 @@ const moment = require('moment')
 const stationList = require('./private/stationList');
 console.log(stationList.length)
 let stationListConversion = 100
+let passPhraseCache = []
 const arrivalURLs = ['http://localhost:8080', 'https://arrival.stomprocket.io']
 findStationCode = (abbr) => {
   let item = stationList.filter(i => {
@@ -230,10 +231,13 @@ app.post('/api/v1/createAccount', function (req, res) {
       const passphrase = req.body.passphrase
       db.collection('accounts').doc(passphrase).set({
         notificationDuration: 5
+      }).then(e => {
+        res.status(200)
+        res.send({success: true})
+        res.end()
       })
-      res.status(200)
-      res.send({success: true})
-      res.end()
+
+
     } else {
       res.status(400)
       res.end()
