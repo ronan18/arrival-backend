@@ -12,6 +12,7 @@ const moment = require('moment')
 const stationList = require('./private/stationList');
 console.log(stationList.length)
 let stationListConversion = 100
+const arrivalURLs = ['http://localhost:8080', 'https://arrival.stomprocket.io']
 findStationCode = (abbr) => {
   let item = stationList.filter(i => {
     return i.abbr === abbr
@@ -221,6 +222,64 @@ app.get('/', function (req, res) {
   res.send('API')
   res.end()
 });
+app.post('/api/v1/createAccount', function (req, res) {
+  console.log(req.headers.origin, req.body)
+  let host = req.headers.origin
+  if (arrivalURLs.indexOf(host) > -1) {
+    if (req.body.passphrase) {
+      const passphrase = req.body.passphrase
+      db.collection('accounts').doc(passphrase).set({
+        notificationDuration: 5
+      })
+      res.status(200)
+      res.send({success: true})
+      res.end()
+    } else {
+      res.status(400)
+      res.end()
+    }
+  } else {
+    res.status(401)
+    res.end()
+  }
+})
+app.post('/api/v1/passphraseCheck', function (req, res) {
+  console.log(req.headers.origin, req.body)
+  let host = req.headers.origin
+  if (arrivalURLs.indexOf(host) > -1) {
+    if (req.body.passphrase) {
+      const passphrase = req.body.passphrase
+      let ref = db.collection('accounts').doc(passphrase);
+      ref.get()
+      .then(doc => {
+        if (!doc.exists) {
+          console.log('No such document!');
+          res.status(200)
+          res.send({passphrase: passphrase, exists: false})
+          res.end()
+        } else {
+          console.log('exists')
+          res.status(200)
+          res.send({passphrase: passphrase, exists: true})
+          res.end()
+        }
+      })
+      .catch(err => {
+        console.log('Error getting person', err);
+        res.status(500)
+        res.end()
+      });
+
+    } else {
+      res.status(400)
+      res.end()
+    }
+  } else {
+    res.status(401)
+    res.end()
+  }
+
+})
 app.post('/api/v1/suggestions/from', function (req, res) {
   console.log(req.headers.authorization, req.body)
   const auth = req.headers.authorization
@@ -285,32 +344,36 @@ app.post('/api/v1/suggestions/to', function (req, res) {
     if (pass && location) {
       db.collection('accounts').doc(pass).get().then(snap => {
         const json = snap.data().net
-        const net = new brain.NeuralNetwork()
-        net.fromJSON(json);
-        const time = Date.now()
-        const result = net.run({
-          day: Number(parseInt(moment(time).format('d'), 10)) / 10,
-          hour: Number(parseInt(moment(time).format('HH'), 10)) / 100,
-          station: findStationCode(req.body.station.abbr) / 100
-        })
-        console.log(result)
-
         let resultsArray = []
         let resultStations = []
-        for (const key in result) {
-          if (result.hasOwnProperty(key) && req.body.station.abbr !== key) {
-            resultStations.push(key)
-            const stationData = bartList.filter(obj => {
-              return obj.abbr === key
-            })[0]
-            stationData.priority = result[key]
-            resultsArray.push(stationData)
+        if (json) {
+          const net = new brain.NeuralNetwork()
+          net.fromJSON(json);
+          const time = Date.now()
+          const result = net.run({
+            day: Number(parseInt(moment(time).format('d'), 10)) / 10,
+            hour: Number(parseInt(moment(time).format('HH'), 10)) / 100,
+            station: findStationCode(req.body.station.abbr) / 100
+          })
+          console.log(result)
+
+
+          for (const key in result) {
+            if (result.hasOwnProperty(key) && req.body.station.abbr !== key) {
+              resultStations.push(key)
+              const stationData = bartList.filter(obj => {
+                return obj.abbr === key
+              })[0]
+              stationData.priority = result[key]
+              resultsArray.push(stationData)
+            }
           }
+
+          resultsArray = resultsArray.sort((a, b) => {
+            return b.priority - a.priority
+          })
         }
 
-        resultsArray = resultsArray.sort((a, b) => {
-          return b.priority - a.priority
-        })
         bartList.map(i => {
           if (resultStations.indexOf(i.abbr) === -1 && req.body.station.abbr !== i.abbr) {
             resultsArray.push(i)
