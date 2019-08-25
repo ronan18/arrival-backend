@@ -1,6 +1,6 @@
 {
   "name": "arrival-backend",
-  "version": "0.0.1",
+  "version": "1.0.0",
   "description": "The backend for Arrival, the smarter, faster way to coordinate BART schedules",
   "main": "index.js",
   "scripts": {

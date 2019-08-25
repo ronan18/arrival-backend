@@ -443,6 +443,8 @@ io.on('connection', function (socket) {
         connectedUser.data.lastseen = admin.firestore.Timestamp.fromDate(new Date())
         db.collection('accounts').doc(pass).update({lastseen: connectedUser.data.lastseen});
         console.log('updated lastseen')
+      } else {
+        console.log(pass, 'exists', user.exists)
       }
     })
 
