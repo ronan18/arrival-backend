@@ -230,7 +230,8 @@ app.post('/api/v1/createAccount', function (req, res) {
     if (req.body.passphrase) {
       const passphrase = req.body.passphrase
       db.collection('accounts').doc(passphrase).set({
-        notificationDuration: 5
+        notificationDuration: 5,
+        accountCreated: admin.firestore.Timestamp.fromDate(new Date())
       }).then(e => {
         res.status(200)
         res.send({success: true})
