@@ -13,7 +13,7 @@ const stationList = require('./private/stationList');
 console.log(stationList.length)
 let stationListConversion = 100
 let passPhraseCache = []
-const arrivalURLs = ['http://localhost:8080', 'https://arrival.stomprocket.io']
+const arrivalURLs = ['http://localhost:8080', 'https://arrival.stomprocket.io', 'https://app.arrival.city']
 findStationCode = (abbr) => {
   let item = stationList.filter(i => {
     return i.abbr === abbr
@@ -244,6 +244,7 @@ app.post('/api/v1/createAccount', function (req, res) {
       res.end()
     }
   } else {
+    console.log('host auth failed')
     res.status(401)
     res.end()
   }
