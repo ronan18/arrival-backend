@@ -27,7 +27,7 @@ convertStationCode = (code) => {
   return stationList[Math.round(code.abbr * stationListConversion)]
 }
 //const apiData = {url: 'https://api.arrival.stomprocket.io', key: '51c2a8160c8e8dedf86698d51159f5a1', /*key: apiKey*/}
-const apiData = {url: 'https://api.arrival.stomprocket.io', key: apiKey}
+const apiData = {url: 'https://api.arrival.city', key: apiKey}
 app.use(cors())
 io.origins('*:*')
 app.use(bodyParser.urlencoded({extended: false}))
