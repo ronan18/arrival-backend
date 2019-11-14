@@ -66,7 +66,7 @@ mongo.connect(url, {
       let trainingData = createTrainingData(trips)
       //console.log(trainingData)
       const net = new brain.NeuralNetwork(config)
-      net.train(trainingData, {
+      let trainingResults = net.train(trainingData, {
         log: (error) => console.log(error),
         logPeriod: 1000
       })
@@ -77,10 +77,11 @@ mongo.connect(url, {
       //console.log(json)
       db.collection('users').updateOne({_id: req.params.pass}, {
         $set: {
-          net: json, netTimestamp: FieldValue.serverTimestamp()
+          net: json, netTimestamp: FieldValue.serverTimestamp(),
+          netLogs: trainingResults
         }
       })
-      res.json({success: true});
+      res.json({success: true, trainingResults});
       res.end()
     })
 

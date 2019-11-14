@@ -169,6 +169,18 @@ mongo.connect(url, {
     }
 
   })
+  app.post('/api/v2/createaccount', async function (req, res) {
+    if (req.body.passphrase) {
+      await db.collection('users').insertOne({_id: req.body.passphrase, created: Date.now()})
+      res.status(200)
+      res.send({created: req.body.passphrase, success: true})
+      res.end()
+    } else {
+      res.status(400)
+      res.send({error: 'no passphrase'})
+      res.end()
+    }
+  })
   app.get('/api/v2/routes/:from/:to', async function (req, res) {
 
     if (req.headers.authorization) {
