@@ -209,6 +209,6 @@ mongo.connect(url, {
   //...
 })
 
-http.listen(3000, function () {
-  console.log('listening on *:3000');
+http.listen(3008, function () {
+  console.log('listening on *:3008');
 });
