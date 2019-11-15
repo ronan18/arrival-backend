@@ -191,7 +191,7 @@ mongo.connect(url, {
       if (users.length === 1) {
         const user = users[0]
         updateUser(passphrase)
-        fetch(`http://api.bart.gov/api/sched.aspx?cmd=depart&orig=${req.params.from}&dest=${req.params.to}&date=now&key=${bartkey}&b=2&a=2&l=1&json=y`).then(bartRes => bartRes.json()).then(bartRes => {
+        fetch(`http://api.bart.gov/api/sched.aspx?cmd=depart&orig=${req.params.from}&dest=${req.params.to}&date=now&key=${bartkey}&b=0&a=4&l=1&json=y`).then(bartRes => bartRes.json()).then(bartRes => {
           const compiledRes = {
             trips: bartRes.root.schedule.request.trip
           }
