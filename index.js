@@ -20,6 +20,7 @@ const aiServerPort = 8082
 let stationListConversion = 100
 let passPhraseCache = []
 const arrivalURLs = ['http://localhost:8080', 'https://arrival.stomprocket.io', 'https://app.arrival.city']
+const version = require('./package.json').version
 const compression = require('compression')
 app.use(compression({ filter: shouldCompress }))
 
@@ -69,7 +70,7 @@ mongo.connect(url, {
 
   app.get('/', function (req, res) {
     res.status(200)
-    res.send('API')
+    res.send('API v', version)
     res.end()
   });
   app.get('/api/v2/login', async function (req, res) {
@@ -82,7 +83,7 @@ mongo.connect(url, {
         updateUser(passphrase)
         const userKey = uuidv4()
         db.collection('users').updateOne({_id: passphrase}, {$set: {key: userKey, keyGenerated: Date.now()}})
-        let result = {user: 'true', key: userKey}
+        let result = {user: 'true', key: userKey, version: version}
         if (user.net) {
           result.net = user.net
         } else {
