@@ -85,6 +85,7 @@ mongo.connect(url, {
         updateUser(passphrase)
         const userKey = uuidv4()
         db.collection('users').updateOne({_id: passphrase}, {$set: {key: userKey, keyGenerated: Date.now()}})
+        console.log(passphrase)
         let result = {user: 'true', key: userKey, version: version}
         if (user.net) {
           result.net = user.net
@@ -241,15 +242,16 @@ mongo.connect(url, {
       if (users.length === 1) {
         const user = users[0]
         updateUser(passphrase)
-        fetch(`http://api.bart.gov/api/sched.aspx?cmd=depart&orig=${req.params.from}&dest=${req.params.to}&date=now&key=${bartkey}&b=0&a=4&l=1&json=y`).then(bartRes => bartRes.json()).then(bartRes => {
+        fetch(`https://api.bart.gov/api/sched.aspx?cmd=depart&orig=${req.params.from}&dest=${req.params.to}&date=now&key=${bartkey}&b=0&a=4&l=1&json=y`).then(bartRes => bartRes.json()).then(bartRes => {
           const compiledRes = {
             trips: bartRes.root.schedule.request.trip
           }
-          //   console.log(compiledRes)
+            // console.log(compiledRes)
           res.status(200)
           res.send(compiledRes)
           res.end()
         }).catch(err => {
+          console.log(err)
           res.status(500)
           res.send({error: {message: 'error fetching from BART API'}})
           res.end()
