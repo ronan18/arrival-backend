@@ -38,7 +38,7 @@ mongo.connect(url, {
   let netErrorTotal = 0;
   let netErrorCount = 0;
   users.forEach(user => {
-    if (user.trips) {s
+    if (user.trips) {
       results.totalTrips += user.trips.length
     }
     if (user.netLogs) {
