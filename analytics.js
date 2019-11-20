@@ -26,7 +26,8 @@ mongo.connect(url, {
   }
   const db = client.db('arrival-db')
   let results = {
-    totalTrips: 0
+    totalTrips: 0,
+    activeUsers: 0
   }
   let users = await db.collection("users").find({}, {
     projection: {
@@ -45,8 +46,11 @@ mongo.connect(url, {
       netErrorTotal += user.netLogs.error
       netErrorCount++
     }
+    if (user.lastSeen) {
+      results.activeUsers++
+    }
 
   })
-  results.netErrorAvg = netErrorTotal/netErrorCount
+  results.netErrorAvg = netErrorTotal / netErrorCount
   console.log(results)
 })
