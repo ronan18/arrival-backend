@@ -27,11 +27,12 @@ mongo.connect(url, {
   const db = client.db('arrival-db')
   let results = {
     totalTrips: 0,
-    activeUsers: 0
+    activeUsers: 0,
+    clientVersions: {}
   }
   let users = await db.collection("users").find({}, {
     projection: {
-      _id: 1, created: 1, lastSeen: 1, netLogs: 1, trips: 1
+      _id: 1, created: 1, lastSeen: 1, netLogs: 1, trips: 1, clientVersion: 1
     }
   }).toArray()
   console.log(users)
@@ -48,6 +49,14 @@ mongo.connect(url, {
     }
     if (user.lastSeen) {
       results.activeUsers++
+    }
+    if (user.clientVersion) {
+      if (results.clientVersions[user.clientVersion]) {
+        results.clientVersions[user.clientVersion]++
+      } else {
+        results.clientVersions[user.clientVersion] = 1
+      }
+
     }
 
   })
