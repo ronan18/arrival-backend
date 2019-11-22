@@ -72,7 +72,7 @@ mongo.connect(url, {
 
   app.get('/', function (req, res) {
     res.status(200)
-    res.send('API v', version)
+    res.send(`API v${version}`)
     res.end()
   });
   app.get('/api/v2/login', async function (req, res) {
