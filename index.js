@@ -217,6 +217,54 @@ mongo.connect(url, {
 
 
   })
+  app.get('/api/v2/trains/:from/siri', async function (req, res) {
+
+    if (req.headers.authorization) {
+      const passphrase = req.headers.authorization
+      //  console.log(passphrase)
+      const users = await db.collection('users').find({_id: passphrase}).toArray()
+      //console.log(users)
+      if (users.length === 1) {
+        const user = users[0]
+        updateUser(passphrase)
+        fetch(`https://api.bart.gov/api/etd.aspx?cmd=etd&orig=${req.params.from}&key=${bartkey}&json=y`).then(bartRes => bartRes.json()).then(bartRes => {
+          const estimates = bartRes.root.station[0].etd
+          let trains = ''
+          let i = 0
+          do {
+            if ( i === 3) {
+              trains += ` and a ${estimates[i].destination} in ${estimates[i].estimate[0].minutes}.`
+            } else {
+              trains += ` A ${estimates[i].destination} in ${estimates[i].estimate[0].minutes},`
+            }
+
+            i++
+          } while (i <= 3)
+
+          let message = `The next four trains from ${bartRes.root.station[0].name} station are: ${trains}`
+          //   console.log(compiledRes)
+          res.status(200)
+          res.send(message)
+          res.end()
+        }).catch(err => {
+          res.status(500)
+          res.send({error: {message: 'error fetching from BART API'}})
+          res.end()
+        })
+
+
+      } else {
+        res.status(401)
+        res.send({error: {message: 'User not found'}})
+        res.end()
+      }
+
+    } else {
+      res.status(401)
+      res.send({error: {message: 'no user token'}})
+    }
+
+  })
   app.get('/api/v2/trains/:from', async function (req, res) {
 
     if (req.headers.authorization) {
