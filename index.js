@@ -24,6 +24,24 @@ const version = require('./package.json').version
 const compression = require('compression')
 app.use(compression({filter: shouldCompress}))
 
+function getDistanceFromLatLonInKm(lat1, lon1, lat2, lon2) {
+  var R = 6371; // Radius of the earth in km
+  var dLat = deg2rad(lat2 - lat1);  // deg2rad below
+  var dLon = deg2rad(lon2 - lon1);
+  var a =
+    Math.sin(dLat / 2) * Math.sin(dLat / 2) +
+    Math.cos(deg2rad(lat1)) * Math.cos(deg2rad(lat2)) *
+    Math.sin(dLon / 2) * Math.sin(dLon / 2)
+  ;
+  var c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
+  var d = R * c; // Distance in km
+  return d;
+}
+
+function deg2rad(deg) {
+  return deg * (Math.PI / 180)
+}
+
 function shouldCompress(req, res) {
   if (req.headers['x-no-compression']) {
     // don't compress responses with this request header
@@ -182,6 +200,23 @@ mongo.connect(url, {
     res.end()
 
   })
+  app.get('/api/v2/closeststation/:lat/:long', function (req, res) {
+    if (req.headers.authorization) {
+      const passphrase = req.headers.authorization
+      const lat = req.params.lat
+      const long = req.params.long
+      let closestStation = bartList.sort((a, b) => {
+        //console.log(getDistanceFromLatLonInKm(position.coords.latitude, position.coords.longitude, a.gtfs_latitude, a.gtfs_longitude), 'position', a.abbr)
+        return getDistanceFromLatLonInKm(lat, long, a.gtfs_latitude, a.gtfs_longitude) - getDistanceFromLatLonInKm(lat, long, b.gtfs_latitude, b.gtfs_longitude)
+      })
+
+      res.status(200)
+      res.send(closestStation[0])
+      res.end()
+    }
+
+
+  })
   app.get('/api/v2/trains/:from', async function (req, res) {
 
     if (req.headers.authorization) {
@@ -246,7 +281,7 @@ mongo.connect(url, {
           const compiledRes = {
             trips: bartRes.root.schedule.request.trip
           }
-            // console.log(compiledRes)
+          // console.log(compiledRes)
           res.status(200)
           res.send(compiledRes)
           res.end()
