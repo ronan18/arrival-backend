@@ -211,7 +211,7 @@ mongo.connect(url, {
       })
 
       res.status(200)
-      res.send(closestStation[0])
+      res.send(closestStation[0].abbr)
       res.end()
     }
 
