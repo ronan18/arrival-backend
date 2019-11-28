@@ -217,7 +217,7 @@ mongo.connect(url, {
 
 
   })
-  app.get('/api/v2/trains/:from/siri', async function (req, res) {
+  app.get('/api/v2/siri/trains/:from', async function (req, res) {
 
     if (req.headers.authorization) {
       const passphrase = req.headers.authorization
