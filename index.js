@@ -123,6 +123,32 @@ mongo.connect(url, {
       res.send({error: {message: 'no user token'}})
     }
   })
+  app.get('/api/v2/siri/login', async function (req, res) {
+
+    if (req.headers.authorization) {
+      const passphrase = req.headers.authorization
+      const users = await db.collection('users').find({_id: passphrase}).toArray()
+      // console.log(users)
+      if (users.length === 1) {
+        const user = users[0]
+        console.log('login', req.headers.authorization)
+        updateUser(passphrase)
+
+        let result = 'true'
+
+        res.status(200)
+        res.send(result)
+        res.end()
+      } else {
+        res.status(401)
+        res.send('false')
+        res.end()
+      }
+    } else {
+      res.status(401)
+      res.send('false')
+    }
+  })
   app.post('/api/v2/login', async function (req, res) {
 
     if (req.headers.authorization) {
