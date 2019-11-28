@@ -232,10 +232,12 @@ mongo.connect(url, {
           let trains = ''
           let i = 0
           do {
-            if ( i === 3) {
-              trains += ` and a ${estimates[i].destination} in ${estimates[i].estimate[0].minutes}.`
-            } else {
+            if (i === 3) {
+              trains += ` and a ${estimates[i].destination} in ${estimates[i].estimate[0].minutes}`
+            } else if (i === 0) {
               trains += ` A ${estimates[i].destination} in ${estimates[i].estimate[0].minutes},`
+            } else {
+              trains += ` ${estimates[i].destination} in ${estimates[i].estimate[0].minutes},`
             }
 
             i++
