@@ -255,26 +255,38 @@ mongo.connect(url, {
         updateUser(passphrase)
         fetch(`https://api.bart.gov/api/etd.aspx?cmd=etd&orig=${req.params.from}&key=${bartkey}&json=y`).then(bartRes => bartRes.json()).then(bartRes => {
           const estimates = bartRes.root.station[0].etd
+          //console.log(estimates)
           let trains = ''
           let i = 0
           do {
-            if (i === 3) {
+            if (i === estimates.length - 1 && i != 0) {
               trains += ` and a ${estimates[i].destination} in ${estimates[i].estimate[0].minutes}`
             } else if (i === 0) {
-              trains += ` A ${estimates[i].destination} in ${estimates[i].estimate[0].minutes},`
+              if (estimates.length === 1) {
+                trains += ` A ${estimates[i].destination} in ${estimates[i].estimate[0].minutes}`
+              } else {
+                trains += ` A ${estimates[i].destination} in ${estimates[i].estimate[0].minutes},`
+              }
+
             } else {
               trains += ` ${estimates[i].destination} in ${estimates[i].estimate[0].minutes},`
             }
 
             i++
-          } while (i <= 3)
+          } while (i <= 3 && i <= estimates.length - 1)
+          let message = ''
+          if (estimates.length === 1) {
+            message = `The next train from ${bartRes.root.station[0].name} station is ${trains}`
+          } else {
+            message = `The next ${i} trains from ${bartRes.root.station[0].name} station are: ${trains}`
+          }
 
-          let message = `The next four trains from ${bartRes.root.station[0].name} station are: ${trains}`
           //   console.log(compiledRes)
           res.status(200)
           res.send(message)
           res.end()
         }).catch(err => {
+          console.log(err)
           res.status(500)
           res.send({error: {message: 'error fetching from BART API'}})
           res.end()
