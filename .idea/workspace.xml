@@ -3,7 +3,9 @@
   <component name="ChangeListManager">
     <list default="true" id="5c620a9c-0115-4826-96b3-4a367540869d" name="Default Changelist" comment="">
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/aiServer.js" beforeDir="false" afterPath="$PROJECT_DIR$/aiServer.js" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/index.js" beforeDir="false" afterPath="$PROJECT_DIR$/index.js" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/package-lock.json" beforeDir="false" afterPath="$PROJECT_DIR$/package-lock.json" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/package.json" beforeDir="false" afterPath="$PROJECT_DIR$/package.json" afterDir="false" />
     </list>
     <option name="EXCLUDED_CONVERTED_TO_IGNORED" value="true" />
@@ -75,7 +77,7 @@
       <workItem from="1574457511883" duration="135000" />
       <workItem from="1574536677455" duration="7000" />
       <workItem from="1574910787364" duration="2173000" />
-      <workItem from="1574967343995" duration="1291000" />
+      <workItem from="1574967343995" duration="2571000" />
     </task>
     <servers />
   </component>

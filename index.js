@@ -15,6 +15,7 @@ const uuidv4 = require('uuid/v4');
 const bartkey = keys.bart
 const mongo = require('mongodb').MongoClient;
 const url = 'mongodb://localhost:27017'
+const agendaUrl = 'mongodb://localhost:27017/arrival-que'
 console.log(stationList.length)
 const aiServerPort = 8082
 let stationListConversion = 100
@@ -22,6 +23,9 @@ let passPhraseCache = []
 const arrivalURLs = ['http://localhost:8080', 'https://arrival.stomprocket.io', 'https://app.arrival.city']
 const version = require('./package.json').version
 const compression = require('compression')
+const Agenda = require('agenda')
+const agenda = new Agenda({db: {address: agendaUrl}});
+agenda.start();
 app.use(compression({filter: shouldCompress}))
 
 function getDistanceFromLatLonInKm(lat1, lon1, lat2, lon2) {
@@ -201,7 +205,8 @@ mongo.connect(url, {
               }
             }
           })
-          fetch(`http://localhost:${aiServerPort}/api/runai/${req.body.user}`)
+          agenda.now('run to ai', {user: req.body.user})
+          //fetch(`http://localhost:${aiServerPort}/api/runai/${req.body.user}`)
           res.status(200)
           res.send({error: false})
           res.end()
