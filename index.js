@@ -188,6 +188,43 @@ mongo.connect(url, {
       res.send({error: {message: 'no user token'}})
     }
   })
+  app.post('/api/v2/fromstationdata', async function (req, res) {
+    if (req.body.user) {
+      const users = await db.collection('users').find({_id: req.body.user}).toArray()
+      // console.log(users)
+      if (users.length === 1) {
+        const user = users[0]
+        updateUser(req.body.passphrase)
+        if (req.body.fromStation) {
+          await db.collection('users').updateOne({_id: req.body.user}, {
+            $push: {
+              fromStationData: {
+                time: Date.now(),
+                from: req.body.fromStation,
+                location: req.body.location,
+                closestStation:  req.body.closestStation
+              }
+            }
+          })
+          agenda.now('run from ai', {user: req.body.user})
+          //fetch(`http://localhost:${aiServerPort}/api/runai/${req.body.user}`)
+          res.status(200)
+          res.send({error: false})
+          res.end()
+        } else {
+          res.status(400)
+          res.send({error: {message: 'no station'}})
+        }
+      } else {
+        res.status(401)
+        res.send({error: {message: 'no user'}})
+      }
+
+    } else {
+      res.status(401)
+      res.send({error: {message: 'no user token'}})
+    }
+  })
   app.post('/api/v2/addStationData', async function (req, res) {
     if (req.body.user) {
       const users = await db.collection('users').find({_id: req.body.user}).toArray()

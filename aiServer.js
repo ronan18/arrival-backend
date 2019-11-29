@@ -22,7 +22,6 @@ admin.initializeApp({
 const stationList = require('./private/stationList');
 
 
-
 createTrainingData = (trips) => {
   let data = []
   trips.forEach(i => {
@@ -35,6 +34,23 @@ createTrainingData = (trips) => {
       },
       output: {
         [i.to.abbr]: 1
+      }
+    })
+  })
+  return data
+}
+createFromTrainingData = (trips) => {
+  let data = []
+  trips.forEach(i => {
+    console.log(i, moment(i.time).tz('America/Los_Angeles').day(), moment(i.time).tz('America/Los_Angeles').hour())
+    data.push({
+      input: {
+        day: moment(i.time).tz('America/Los_Angeles').day() / 10,
+        hour: moment(i.time).tz('America/Los_Angeles').hour() / 100,
+        [i.closestStation.abbr]: 1
+      },
+      output: {
+        [i.from.abbr]: 1
       }
     })
   })
@@ -84,6 +100,39 @@ mongo.connect(url, {
         }
       })
 
+    })
+
+
+  });
+  agenda.define('run from ai', async job => {
+    console.log('running from ai', job.attrs.data.user)
+    const user = job.attrs.data.user
+
+    db.collection('users').findOne({_id: user}, (err, snap) => {
+      const trips = snap.fromStationData
+      const config = {
+        // inputLayers: 3,
+        hiddenLayers: [4, 4, 4],
+        iterations: 10000
+      };
+      let trainingData = createFromTrainingData(trips)
+
+      const net = new brain.NeuralNetwork(config)
+      let trainingResults = net.train(trainingData, {
+        log: (error) => console.log(error),
+        logPeriod: 1000
+      })
+      // console.log(net.run(trainingData[trainingData.length - 1].input))
+      console.log('trained from data ', user)
+
+      const json = net.toJSON()
+      //console.log(json)
+      db.collection('users').updateOne({_id: user}, {
+        $set: {
+          fromNet: json, netTimestamp: FieldValue.serverTimestamp(),
+          fromNetLogs: trainingResults
+        }
+      })
     })
 
 
