@@ -6,7 +6,6 @@
       <change beforePath="$PROJECT_DIR$/aiServer.js" beforeDir="false" afterPath="$PROJECT_DIR$/aiServer.js" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/index.js" beforeDir="false" afterPath="$PROJECT_DIR$/index.js" afterDir="false" />
     </list>
-    <option name="EXCLUDED_CONVERTED_TO_IGNORED" value="true" />
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
     <option name="HIGHLIGHT_NON_ACTIVE_CHANGELIST" value="false" />
@@ -16,6 +15,11 @@
     <option name="RECENT_GIT_ROOT_PATH" value="$PROJECT_DIR$" />
   </component>
   <component name="ProjectId" id="1OkwVAMW0pcUtFDFmGQcHUIVmH9" />
+  <component name="ProjectViewState">
+    <option name="hideEmptyMiddlePackages" value="true" />
+    <option name="showExcludedFiles" value="true" />
+    <option name="showLibraryContents" value="true" />
+  </component>
   <component name="PropertiesComponent">
     <property name="SHARE_PROJECT_CONFIGURATION_FILES" value="true" />
     <property name="WebServerToolWindowFactoryState" value="false" />
@@ -31,15 +35,15 @@
       <recent name="$PROJECT_DIR$" />
     </key>
   </component>
-  <component name="RunDashboard">
-    <option name="ruleStates">
+  <component name="ServiceViewManager">
+    <option name="viewStates">
       <list>
-        <RuleState>
-          <option name="name" value="ConfigurationTypeDashboardGroupingRule" />
-        </RuleState>
-        <RuleState>
-          <option name="name" value="StatusDashboardGroupingRule" />
-        </RuleState>
+        <serviceView>
+          <treeState>
+            <expand />
+            <select />
+          </treeState>
+        </serviceView>
       </list>
     </option>
   </component>
@@ -75,7 +79,15 @@
       <workItem from="1574457511883" duration="135000" />
       <workItem from="1574536677455" duration="7000" />
       <workItem from="1574910787364" duration="2173000" />
-      <workItem from="1574967343995" duration="3886000" />
+      <workItem from="1574967343995" duration="6232000" />
+      <workItem from="1575231134716" duration="550000" />
+      <workItem from="1575327471577" duration="272000" />
+      <workItem from="1575333650317" duration="512000" />
+      <workItem from="1575475797837" duration="506000" />
+      <workItem from="1575562510372" duration="351000" />
+      <workItem from="1576000357064" duration="34000" />
+      <workItem from="1576772064253" duration="521000" />
+      <workItem from="1578254738879" duration="790000" />
     </task>
     <servers />
   </component>

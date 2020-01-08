@@ -98,6 +98,7 @@ mongo.connect(url, {
     res.end()
   });
   app.get('/api/v2/login', async function (req, res) {
+
     if (req.headers.authorization) {
       const passphrase = req.headers.authorization
       const users = await db.collection('users').find({_id: passphrase}).toArray()
@@ -107,12 +108,21 @@ mongo.connect(url, {
         updateUser(passphrase)
         const userKey = uuidv4()
         db.collection('users').updateOne({_id: passphrase}, {$set: {key: userKey, keyGenerated: Date.now()}})
-        console.log(passphrase)
+        //console.log(passphrase, 'loging stuff')
         let result = {user: 'true', key: userKey, version: version}
         if (user.net) {
           result.net = user.net
+          console.log('to net')
         } else {
           result.net = false
+          console.log('no to net')
+        }
+        if (user.fromNet) {
+          result.fromNet = user.fromNet
+          console.log('from net')
+        } else {
+          result.fromNet = false
+          console.log('no from net')
         }
         res.status(200)
         res.send(result)
@@ -172,8 +182,17 @@ mongo.connect(url, {
         let result = {user: 'true', key: userKey, version: version}
         if (user.net) {
           result.net = user.net
+          console.log('to net')
         } else {
           result.net = false
+          console.log('no to net')
+        }
+        if (user.fromNet) {
+          result.fromNet = user.fromNet
+          console.log('from net')
+        } else {
+          result.fromNet = false
+          console.log('no from net')
         }
         res.status(200)
         res.send(result)
@@ -202,7 +221,7 @@ mongo.connect(url, {
                 time: Date.now(),
                 from: req.body.fromStation,
                 location: req.body.location,
-                closestStation:  req.body.closestStation
+                closestStation: req.body.closestStation
               }
             }
           })

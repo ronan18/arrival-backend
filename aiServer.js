@@ -129,7 +129,8 @@ mongo.connect(url, {
       //console.log(json)
       db.collection('users').updateOne({_id: user}, {
         $set: {
-          fromNet: json, netTimestamp: FieldValue.serverTimestamp(),
+          fromNet: json,
+          netTimestamp: FieldValue.serverTimestamp(),
           fromNetLogs: trainingResults
         }
       })
