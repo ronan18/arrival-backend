@@ -287,6 +287,13 @@ mongo.connect(url, {
     res.end()
 
   })
+  app.get('/api/v3/stations', function (req, res) {
+
+    res.status(200)
+    res.send({stations: bartList, version: 1})
+    res.end()
+
+  })
   app.get('/api/v2/closeststation/:lat/:long', function (req, res) {
     if (req.headers.authorization) {
       const passphrase = req.headers.authorization
