@@ -97,6 +97,7 @@ mongo.connect(url, {
     res.send(`API v${version}`)
     res.end()
   });
+  //TODO add login v3 that allows for no retrieval of JS AI data to reduce data consumption and packet travel
   app.get('/api/v2/login', async function (req, res) {
 
     if (req.headers.authorization) {
