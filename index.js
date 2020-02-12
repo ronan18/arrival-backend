@@ -24,7 +24,9 @@ const arrivalURLs = ['http://localhost:8080', 'https://arrival.stomprocket.io', 
 const version = require('./package.json').version
 const compression = require('compression')
 const Agenda = require('agenda')
+const csv = require('csv-parser');
 const agenda = new Agenda({db: {address: agendaUrl}});
+const fs = require('fs');
 agenda.start();
 app.use(compression({filter: shouldCompress}))
 
@@ -442,6 +444,80 @@ mongo.connect(url, {
           res.status(200)
           res.send(compiledRes)
           res.end()
+        }).catch(err => {
+          console.log(err)
+          res.status(500)
+          res.send({error: {message: 'error fetching from BART API'}})
+          res.end()
+        })
+
+
+      } else {
+        res.status(401)
+        res.send({error: {message: 'User not found'}})
+        res.end()
+      }
+
+    } else {
+      res.status(401)
+      res.send({error: {message: 'no user token'}})
+    }
+
+  })
+  app.get('/api/v3/routes/:from/:to', async function (req, res) {
+    if (req.headers.authorization) {
+      const passphrase = req.headers.authorization
+      //  console.log(passphrase)
+      const users = await db.collection('users').find({_id: passphrase}).toArray()
+      //console.log(users)
+      if (users.length === 1) {
+        const user = users[0]
+        updateUser(passphrase)
+        fetch(`https://api.bart.gov/api/sched.aspx?cmd=depart&orig=${req.params.from}&dest=${req.params.to}&date=now&key=${bartkey}&b=0&a=4&l=1&json=y`).then(bartRes => bartRes.json()).then(bartRes => {
+          const compiledRes = {
+            trips: bartRes.root.schedule.request.trip
+          }
+          console.log("handeling v3 route request")
+          let routes = {}
+          let x = 0
+          compiledRes.trips.forEach(async trip => {
+            let i = 0
+            while (i < trip.leg.length ) {
+            console.log(i, trip.leg[i])
+              let route = trip.leg[i]["@line"]
+
+              let regex = /ROUTE (\d+)/
+              let routeNumber = regex.exec(route)
+              console.log(routeNumber[1], route)
+              let bartRes
+              if (routes[routeNumber[1]]) {
+                bartRes = routes[routeNumber[1]]
+              } else {
+                bartRes = await fetch(`https://api.bart.gov/api/route.aspx?cmd=routeinfo&route=${routeNumber[1]}&key=${bartkey}&json=y`).then(bartRes => bartRes.json())
+                bartRes = bartRes.root.routes.route
+              }
+
+
+              console.log(bartRes)
+              routes[routeNumber[1]] = bartRes
+              compiledRes.trips[x].leg[i].route = routeNumber[1]
+              i ++
+            }
+            x ++
+            console.log(x, compiledRes.trips.length)
+            if (x >=  compiledRes.trips.length) {
+              console.log(x, "sent")
+              // console.log(compiledRes)
+              compiledRes.routes = routes
+              res.status(200)
+              res.send(compiledRes)
+              res.end()
+            }
+          })
+
+
+
+
         }).catch(err => {
           console.log(err)
           res.status(500)
