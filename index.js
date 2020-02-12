@@ -473,17 +473,18 @@ mongo.connect(url, {
       if (users.length === 1) {
         const user = users[0]
         updateUser(passphrase)
-        fetch(`https://api.bart.gov/api/sched.aspx?cmd=depart&orig=${req.params.from}&dest=${req.params.to}&date=now&key=${bartkey}&b=0&a=4&l=1&json=y`).then(bartRes => bartRes.json()).then(bartRes => {
+        fetch(`https://api.bart.gov/api/sched.aspx?cmd=depart&orig=${req.params.from}&dest=${req.params.to}&date=now&key=${bartkey}&b=0&a=4&l=1&json=y`).then(bartRes => bartRes.json()).then( async bartRes => {
           const compiledRes = {
             trips: bartRes.root.schedule.request.trip
           }
           console.log("handeling v3 route request")
           let routes = {}
           let x = 0
-          compiledRes.trips.forEach(async trip => {
+          while (x < compiledRes.trips.length) {
+            let trip = compiledRes.trips[x]
             let i = 0
             while (i < trip.leg.length ) {
-            console.log(i, trip.leg[i])
+              console.log(x,  i, trip.leg[i])
               let route = trip.leg[i]["@line"]
 
               let regex = /ROUTE (\d+)/
@@ -495,25 +496,27 @@ mongo.connect(url, {
               } else {
                 bartRes = await fetch(`https://api.bart.gov/api/route.aspx?cmd=routeinfo&route=${routeNumber[1]}&key=${bartkey}&json=y`).then(bartRes => bartRes.json())
                 bartRes = bartRes.root.routes.route
+                routes[routeNumber[1]] = bartRes
+                console.log("root aded to databse", routeNumber[1])
               }
 
-
-              console.log(bartRes)
-              routes[routeNumber[1]] = bartRes
               compiledRes.trips[x].leg[i].route = routeNumber[1]
+              console.log(compiledRes.trips[x].leg[i].route, 'confirmed route at', routeNumber[1], x,i)
               i ++
             }
             x ++
             console.log(x, compiledRes.trips.length)
-            if (x >=  compiledRes.trips.length) {
+          }
+
+
               console.log(x, "sent")
               // console.log(compiledRes)
               compiledRes.routes = routes
               res.status(200)
               res.send(compiledRes)
               res.end()
-            }
-          })
+
+
 
 
 

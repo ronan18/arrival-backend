@@ -3,9 +3,7 @@
   <component name="ChangeListManager">
     <list default="true" id="5c620a9c-0115-4826-96b3-4a367540869d" name="Default Changelist" comment="">
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/csvGenerator.js" beforeDir="false" afterPath="$PROJECT_DIR$/csvGenerator.js" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/index.js" beforeDir="false" afterPath="$PROJECT_DIR$/index.js" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/package-lock.json" beforeDir="false" afterPath="$PROJECT_DIR$/package-lock.json" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/package.json" beforeDir="false" afterPath="$PROJECT_DIR$/package.json" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
@@ -28,6 +26,7 @@
     <property name="last_opened_file_path" value="$PROJECT_DIR$" />
     <property name="nodejs_interpreter_path.stuck_in_default_project" value="undefined stuck path" />
     <property name="nodejs_npm_path_reset_for_default_project" value="true" />
+    <property name="settings.editor.selected.configurable" value="preferences.lookFeel" />
   </component>
   <component name="RecentsManager">
     <key name="MoveFile.RECENT_KEYS">
@@ -95,7 +94,8 @@
       <workItem from="1579712791075" duration="1230000" />
       <workItem from="1580443653159" duration="10033000" />
       <workItem from="1581210811463" duration="708000" />
-      <workItem from="1581440346274" duration="3445000" />
+      <workItem from="1581440346274" duration="3556000" />
+      <workItem from="1581541399513" duration="1083000" />
     </task>
     <servers />
   </component>
@@ -120,5 +120,9 @@
       <screen x="0" y="0" width="1680" height="1050" />
     </state>
     <state x="528" y="260" key="#com.intellij.openapi.updateSettings.impl.PluginUpdateInfoDialog/0.0.1680.1050@0.0.1680.1050" timestamp="1578450285808" />
+    <state x="341" y="164" key="SettingsEditor" timestamp="1581541841566">
+      <screen x="0" y="0" width="1680" height="1050" />
+    </state>
+    <state x="341" y="164" key="SettingsEditor/0.0.1680.1050@0.0.1680.1050" timestamp="1581541841566" />
   </component>
 </project>
