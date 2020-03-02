@@ -426,6 +426,19 @@ mongo.connect(url, {
       res.end()
     }
   })
+  app.get('/api/v3/trip/:tripid', async function (req, res) {
+    console.log(req.params.tripid, "trip request")
+const tripRecords = await db.collection('trips').find({_id: req.params.tripid}).toArray()
+    console.log(tripRecords)
+    if (tripRecords.length > 0) {
+res.status(200)
+      res.send(tripRecords[0])
+      console.log("sent trip", tripRecords[0])
+    } else {
+      res.status(400)
+      res.send({error: "invalid trip id"})
+    }
+  })
   app.get('/api/v2/routes/:from/:to', async function (req, res) {
 
     if (req.headers.authorization) {
@@ -482,6 +495,7 @@ mongo.connect(url, {
           let x = 0
           while (x < compiledRes.trips.length) {
             let trip = compiledRes.trips[x]
+            compiledRes.trips[x].tripId = uuidv4()
             let i = 0
             while (i < trip.leg.length ) {
               console.log(x,  i, trip.leg[i])
@@ -504,6 +518,7 @@ mongo.connect(url, {
               console.log(compiledRes.trips[x].leg[i].route, 'confirmed route at', routeNumber[1], x,i)
               i ++
             }
+            db.collection("trips").insertOne({_id: compiledRes.trips[x].tripId, trip: compiledRes.trips[x], routes: routes, date: moment.utc().toString()})
             x ++
             console.log(x, compiledRes.trips.length)
           }
