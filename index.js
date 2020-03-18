@@ -376,6 +376,112 @@ mongo.connect(url, {
     }
 
   })
+  app.post('/api/v3/trains/:from', async function (req, res) {
+
+    if (req.headers.authorization) {
+      const passphrase = req.headers.authorization
+      //  console.log(passphrase)
+      const users = await db.collection('users').find({_id: passphrase}).toArray()
+      //console.log(users)
+      if (users.length === 1) {
+        const user = users[0]
+        updateUser(passphrase)
+        if (req.body.type === "now") {
+          fetch(`https://api.bart.gov/api/etd.aspx?cmd=etd&orig=${req.params.from}&key=${bartkey}&json=y`).then(bartRes => bartRes.json()).then(bartRes => {
+            const compiledRes = {
+              estimates: bartRes.root.station[0],
+              time: bartRes.root.time
+            }
+            //   console.log(compiledRes)
+            res.status(200)
+            res.send(compiledRes)
+            res.end()
+          }).catch(err => {
+            res.status(500)
+            res.send({error: {message: 'error fetching from BART API'}})
+            res.end()
+          })
+        } else if (req.body.type == "leave") {
+          fetch(`https://api.bart.gov/api/sched.aspx?cmd=stnsched&orig=${req.params.from}&key=${bartkey}&json=y&a=4&b=0`).then(bartRes => bartRes.json()).then(async bartRes => {
+            let etds = []
+            let etdsByStation = {}
+            let stations = {}
+         await bartRes.root.station.item.forEach(async train => {
+              console.log(stations[train["@trainHeadStation"]], train["@trainHeadStation"])
+              if (!stations[train["@trainHeadStation"]]) {
+                let stationData = await db.collection("stations").findOne({name: new RegExp('^' + train["@trainHeadStation"].substring(0,4), 'gi')})
+                if (stationData) {
+                  console.log(stationData.abbr)
+                  stations[train["@trainHeadStation"]] = stationData.abbr
+                  etdsByStation[stationData.abbr] = {
+                    abbr: stationData.abbr,
+                    destination: train["@trainHeadStation"],
+                    estimate: []
+                  }
+                } else {
+                  console.log("error getting data for station", train["@trainHeadStation"], stationData)
+                }
+
+              }
+
+              etdsByStation[stations[train["@trainHeadStation"]]].estimate.push({
+                minutes: "10",
+                platform: 3,
+                direction: "North",
+                length: 10,
+                color: "YELLOW",
+                hexcolor: "#fff",
+                "bikeflag": "1",
+              })
+
+
+
+            })
+            console.log(etdsByStation, stations)
+            for (var key in etdsByStation) {
+              if (etdsByStation.hasOwnProperty(key)) {
+                etds.push(etdsByStation[key])
+              }
+            }
+
+            let result = {
+              name: bartRes.root.station.name,
+              abbr: bartRes.root.station.abbr,
+              etd: etds
+            }
+            const compiledRes = {
+              estimates: result
+            }
+            //   console.log(compiledRes)
+            res.status(200)
+            res.send(compiledRes)
+            res.end()
+          }).catch(err => {
+            console.log(err)
+            res.status(500)
+            res.send({error: {message: 'error fetching from BART API'}})
+            res.end()
+          })
+
+        } else {
+          res.status(400)
+          res.send({error: {message: "invalid leave type"}})
+          res.end()
+        }
+
+
+      } else {
+        res.status(401)
+        res.send({error: {message: 'User not found'}})
+        res.end()
+      }
+
+    } else {
+      res.status(401)
+      res.send({error: {message: 'no user token'}})
+    }
+
+  })
   app.get('/api/v2/trains/:from', async function (req, res) {
 
     if (req.headers.authorization) {
@@ -428,10 +534,10 @@ mongo.connect(url, {
   })
   app.get('/api/v3/trip/:tripid', async function (req, res) {
     console.log(req.params.tripid, "trip request")
-const tripRecords = await db.collection('trips').find({_id: req.params.tripid}).toArray()
+    const tripRecords = await db.collection('trips').find({_id: req.params.tripid}).toArray()
     console.log(tripRecords)
     if (tripRecords.length > 0) {
-res.status(200)
+      res.status(200)
       res.send(tripRecords[0])
       console.log("sent trip", tripRecords[0])
     } else {
@@ -486,7 +592,7 @@ res.status(200)
       if (users.length === 1) {
         const user = users[0]
         updateUser(passphrase)
-        fetch(`https://api.bart.gov/api/sched.aspx?cmd=depart&orig=${req.params.from}&dest=${req.params.to}&date=now&key=${bartkey}&b=0&a=4&l=1&json=y`).then(bartRes => bartRes.json()).then( async bartRes => {
+        fetch(`https://api.bart.gov/api/sched.aspx?cmd=depart&orig=${req.params.from}&dest=${req.params.to}&date=now&key=${bartkey}&b=0&a=4&l=1&json=y`).then(bartRes => bartRes.json()).then(async bartRes => {
           const compiledRes = {
             trips: bartRes.root.schedule.request.trip
           }
@@ -497,8 +603,8 @@ res.status(200)
             let trip = compiledRes.trips[x]
             compiledRes.trips[x].tripId = uuidv4()
             let i = 0
-            while (i < trip.leg.length ) {
-              console.log(x,  i, trip.leg[i])
+            while (i < trip.leg.length) {
+              console.log(x, i, trip.leg[i])
               let route = trip.leg[i]["@line"]
 
               let regex = /ROUTE (\d+)/
@@ -515,25 +621,24 @@ res.status(200)
               }
 
               compiledRes.trips[x].leg[i].route = routeNumber[1]
-              console.log(compiledRes.trips[x].leg[i].route, 'confirmed route at', routeNumber[1], x,i)
-              i ++
+              console.log(compiledRes.trips[x].leg[i].route, 'confirmed route at', routeNumber[1], x, i)
+              i++
             }
-            db.collection("trips").insertOne({_id: compiledRes.trips[x].tripId, trip: compiledRes.trips[x], routes: routes, date: moment.utc().toString()})
-            x ++
+            db.collection("trips").insertOne({
+              _id: compiledRes.trips[x].tripId, trip: compiledRes.trips[x], routes: routes,
+              date: moment.utc().toString()
+            })
+            x++
             console.log(x, compiledRes.trips.length)
           }
 
 
-              console.log(x, "sent")
-              // console.log(compiledRes)
-              compiledRes.routes = routes
-              res.status(200)
-              res.send(compiledRes)
-              res.end()
-
-
-
-
+          console.log(x, "sent")
+          // console.log(compiledRes)
+          compiledRes.routes = routes
+          res.status(200)
+          res.send(compiledRes)
+          res.end()
 
 
         }).catch(err => {
