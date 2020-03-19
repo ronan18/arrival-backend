@@ -14,8 +14,8 @@ const keys = require('./private/keys.json');
 const uuidv4 = require('uuid/v4');
 const bartkey = keys.bart
 const mongo = require('mongodb').MongoClient;
-const url = 'mongodb://localhost:27017'
-const agendaUrl = 'mongodb://localhost:27017/arrival-que'
+
+const agendaUrl = keys.mongo.url
 console.log(stationList.length)
 const aiServerPort = 8082
 let stationListConversion = 100
@@ -24,7 +24,8 @@ const arrivalURLs = ['http://localhost:8080', 'https://arrival.stomprocket.io', 
 const version = require('./package.json').version
 const compression = require('compression')
 const Agenda = require('agenda')
-const agenda = new Agenda({db: {address: agendaUrl}});
+const agenda = new Agenda({db: {address: agendaUrl, collection: "arrival-que"}});
+const url = keys.mongo.url
 agenda.start();
 app.use(compression({filter: shouldCompress}))
 
