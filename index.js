@@ -403,47 +403,24 @@ mongo.connect(url, {
           })
         } else if (req.body.type == "leave") {
           fetch(`https://api.bart.gov/api/sched.aspx?cmd=stnsched&orig=${req.params.from}&key=${bartkey}&json=y&a=4&b=0`).then(bartRes => bartRes.json()).then(async bartRes => {
-            let etds = []
-            let etdsByStation = {}
-            let stations = {}
-         await bartRes.root.station.item.forEach(async train => {
-              console.log(stations[train["@trainHeadStation"]], train["@trainHeadStation"])
-              if (!stations[train["@trainHeadStation"]]) {
-                let stationData = await db.collection("stations").findOne({name: new RegExp('^' + train["@trainHeadStation"].substring(0,4), 'gi')})
-                if (stationData) {
-                  console.log(stationData.abbr)
-                  stations[train["@trainHeadStation"]] = stationData.abbr
-                  etdsByStation[stationData.abbr] = {
-                    abbr: stationData.abbr,
-                    destination: train["@trainHeadStation"],
-                    estimate: []
-                  }
-                } else {
-                  console.log("error getting data for station", train["@trainHeadStation"], stationData)
-                }
+          let etds = bartRes.root.station.item.map(item => {
+            let route = item["@line"]
 
-              }
-
-              etdsByStation[stations[train["@trainHeadStation"]]].estimate.push({
-                minutes: "10",
-                platform: 3,
-                direction: "North",
-                length: 10,
-                color: "YELLOW",
-                hexcolor: "#fff",
-                "bikeflag": "1",
-              })
-
-
-
-            })
-            console.log(etdsByStation, stations)
-            for (var key in etdsByStation) {
-              if (etdsByStation.hasOwnProperty(key)) {
-                etds.push(etdsByStation[key])
-              }
+            let regex = /ROUTE (\d+)/
+            let routeNumber = regex.exec(route)
+         //   console.log(routeNumber[1], route)
+            return {
+              destination: item["@trainHeadStation"],
+              time: item["@origTime"],
+              bikeFlag: item["@bikeflag"],
+              load: item["@load"],
+              route: routeNumber[1]
             }
-
+          })
+            etds = etds.filter(item => {
+              return moment(item.time, "hh:mm A").isAfter(moment())
+            })
+            etds = etds.slice(0,20)
             let result = {
               name: bartRes.root.station.name,
               abbr: bartRes.root.station.abbr,
