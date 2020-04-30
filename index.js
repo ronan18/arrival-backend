@@ -402,7 +402,11 @@ mongo.connect(url, {
             res.end()
           })
         } else if (req.body.type == "leave") {
-          fetch(`https://api.bart.gov/api/sched.aspx?cmd=stnsched&orig=${req.params.from}&key=${bartkey}&json=y&a=4&b=0`).then(bartRes => bartRes.json()).then(async bartRes => {
+          let time = req.body.time
+let momentTime = moment(time, "DD-MM-YYYY hh:mm A").tz("America/Los_Angeles")
+          let bartTime = momentTime.format("MM/DD/YYYY")
+          console.log(time, bartTime)
+          fetch(`https://api.bart.gov/api/sched.aspx?cmd=stnsched&orig=${req.params.from}&key=${bartkey}&json=y&a=4&b=0&date=${bartTime}`).then(bartRes => bartRes.json()).then(async bartRes => {
           let etds = bartRes.root.station.item.map(item => {
             let route = item["@line"]
 
@@ -417,8 +421,11 @@ mongo.connect(url, {
               route: routeNumber[1]
             }
           })
+
             etds = etds.filter(item => {
-              return moment(item.time, "hh:mm A").isAfter(moment())
+
+              console.log(item.time, moment(item.time, "hh:mm A").isAfter(momentTime))
+              return moment(item.time, "hh:mm A").isAfter(momentTime)
             })
             etds = etds.slice(0,20)
             let result = {
