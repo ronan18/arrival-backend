@@ -403,31 +403,31 @@ mongo.connect(url, {
           })
         } else if (req.body.type == "leave") {
           let time = req.body.time
-let momentTime = moment(time, "DD-MM-YYYY hh:mm A").tz("America/Los_Angeles")
+          let momentTime = moment(time, "DD-MM-YYYY hh:mm A").tz("America/Los_Angeles")
           let bartTime = momentTime.format("MM/DD/YYYY")
           console.log(time, bartTime)
           fetch(`https://api.bart.gov/api/sched.aspx?cmd=stnsched&orig=${req.params.from}&key=${bartkey}&json=y&a=4&b=0&date=${bartTime}`).then(bartRes => bartRes.json()).then(async bartRes => {
-          let etds = bartRes.root.station.item.map(item => {
-            let route = item["@line"]
+            let etds = bartRes.root.station.item.map(item => {
+              let route = item["@line"]
 
-            let regex = /ROUTE (\d+)/
-            let routeNumber = regex.exec(route)
-         //   console.log(routeNumber[1], route)
-            return {
-              destination: item["@trainHeadStation"],
-              time: item["@origTime"],
-              bikeFlag: item["@bikeflag"],
-              load: item["@load"],
-              route: routeNumber[1]
-            }
-          })
+              let regex = /ROUTE (\d+)/
+              let routeNumber = regex.exec(route)
+              //   console.log(routeNumber[1], route)
+              return {
+                destination: item["@trainHeadStation"],
+                time: item["@origTime"],
+                bikeFlag: item["@bikeflag"],
+                load: item["@load"],
+                route: routeNumber[1]
+              }
+            })
 
             etds = etds.filter(item => {
 
-              console.log(item.time, moment(item.time, "hh:mm A").isAfter(momentTime))
-              return moment(item.time, "hh:mm A").isAfter(momentTime)
+              console.log(item.time + " " + bartRes.root.date, moment(item.time, "hh:mm A M/D/YYYY").isAfter(momentTime))
+              return moment(item.time + " " + bartRes.root.date, "hh:mm A M/D/YYYY").isAfter(momentTime)
             })
-            etds = etds.slice(0,15)
+            etds = etds.slice(0, 15)
             let result = {
               name: bartRes.root.station.name,
               abbr: bartRes.root.station.abbr,
