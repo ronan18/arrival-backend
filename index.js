@@ -427,7 +427,7 @@ let momentTime = moment(time, "DD-MM-YYYY hh:mm A").tz("America/Los_Angeles")
               console.log(item.time, moment(item.time, "hh:mm A").isAfter(momentTime))
               return moment(item.time, "hh:mm A").isAfter(momentTime)
             })
-            etds = etds.slice(0,20)
+            etds = etds.slice(0,15)
             let result = {
               name: bartRes.root.station.name,
               abbr: bartRes.root.station.abbr,
