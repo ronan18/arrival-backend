@@ -22,6 +22,7 @@
   "dependencies": {
     "agenda": "^2.2.0",
     "assert": "^2.0.0",
+    "async": "^3.2.0",
     "body-parser": "^1.19.0",
     "brain.js": "^1.6.1",
     "compression": "^1.7.4",

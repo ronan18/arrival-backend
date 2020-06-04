@@ -14,7 +14,7 @@ const keys = require('./private/keys.json');
 const uuidv4 = require('uuid/v4');
 const bartkey = keys.bart
 const mongo = require('mongodb').MongoClient;
-
+const stationVersion = 4
 const agendaUrl = keys.mongo.url
 console.log(stationList.length)
 const aiServerPort = 8082
@@ -127,6 +127,8 @@ mongo.connect(url, {
           result.fromNet = false
           console.log('no from net')
         }
+        result.stationVersion = stationVersion
+        console.log('sent server station version', stationVersion)
         res.status(200)
         res.send(result)
         res.end()
@@ -291,9 +293,9 @@ mongo.connect(url, {
 
   })
   app.get('/api/v3/stations', function (req, res) {
-
+    console.log("sent station data v", stationVersion)
     res.status(200)
-    res.send({stations: bartList, version: 1})
+    res.send({stations: bartList, version: stationVersion})
     res.end()
 
   })
