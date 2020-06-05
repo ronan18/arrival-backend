@@ -2,7 +2,9 @@ const async = require('async');
 const admin = require("firebase-admin");
 const fetch = require('node-fetch')
 const hat = require('hat');
-
+var SHA256 = require("crypto-js/sha256");
+var MD5 = require("crypto-js/MD5");
+var CryptoJS = require("crypto-js");
 const moment = require('moment')
 const stationList = require('./private/stationList');
 const keys = require('./private/keys.json');
@@ -53,6 +55,39 @@ mongo.connect(url, {
     console.log("done", analytics)
     return
   });
+  agenda.define('update stations', async job => {
+    console.log("updating stations")
+    let list = await fetch(`http://api.bart.gov/api/stn.aspx?cmd=stns&key=${bartkey}&json=y`, {method: 'get'})
+    list = await list.json()
+    console.log("got bart list")
+    let drop = await db.collection('stations').drop()
+    console.log("dropped list", drop)
+    await db.createCollection("stations")
+    console.log("created stations collection")
+    let result = await db.collection('stations').insertMany(list.root.stations.station)
+    let hash = MD5(list.root.stations.station).toString(CryptoJS.enc.Base64)
+   let currentHash =  await db.collection("system").find({_id: "stationHash"}).toArray()
+    currentHash = currentHash[0]
+    console.log("hash current", currentHash.hash, "new", hash,  Number(currentHash.version))
+    if (currentHash.hash == hash) {
+      console.log("stations match")
+
+    } else {
+      console.log("stations hash don't match",)
+      let currentVersion = Number(currentHash.version)
+      currentVersion++
+      let hashDoc = { hash: hash, time: moment.utc().valueOf(), version: currentVersion}
+      console.log(hashDoc);
+      await db.collection('system').updateOne({_id: "stationHash"}, {$set: hashDoc})
+
+    }
+
+
+    console.log("done", result.insertedCount, "stations")
+    return
+  });
+
   await agenda.start();
-  await agenda.every('1 day', 'clean trips')
+   await agenda.every('1 day', 'clean trips')
+   await agenda.every('1 day', 'update stations')
 })

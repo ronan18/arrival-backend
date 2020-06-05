@@ -14,7 +14,7 @@ const keys = require('./private/keys.json');
 const uuidv4 = require('uuid/v4');
 const bartkey = keys.bart
 const mongo = require('mongodb').MongoClient;
-const stationVersion = 4
+let stationVersion = 4
 const agendaUrl = keys.mongo.url
 console.log(stationList.length)
 const aiServerPort = 8082
@@ -27,6 +27,7 @@ const Agenda = require('agenda')
 const agenda = new Agenda({db: {address: agendaUrl, collection: "arrival-que"}});
 const url = keys.mongo.url
 const csv = require('csv-parser');
+var SHA256 = require("crypto-js/sha256");
 agenda.start();
 app.use(compression({filter: shouldCompress}))
 
@@ -83,9 +84,7 @@ mongo.connect(url, {
   const db = client.db('arrival-db')
   fetch(`http://api.bart.gov/api/stn.aspx?cmd=stns&key=${bartkey}&json=y`, {method: 'get'}).then(list => list.json()).then(list => {
     bartList = list.root.stations.station
-    db.collection('stations').drop().then(i => {
-      db.collection('stations').insertMany(list.root.stations.station)
-    })
+
 
   })
 
@@ -127,6 +126,9 @@ mongo.connect(url, {
           result.fromNet = false
           console.log('no from net')
         }
+        let statVersion = await db.collection('system').find({_id: "stationHash"}).toArray()
+
+        stationVersion =  statVersion[0].version
         result.stationVersion = stationVersion
         console.log('sent server station version', stationVersion)
         res.status(200)
@@ -285,14 +287,30 @@ mongo.connect(url, {
       res.send({error: {message: 'no user token'}})
     }
   })
-  app.get('/api/v2/stations', function (req, res) {
+  app.get('/api/v2/stations', async function (req, res) {
+    let statVersion = await db.collection('system').find({_id: "stationHash"}).toArray()
 
+    stationVersion =  statVersion[0].version
+
+    let stations = await db.collection('stations').find().toArray()
+    if (stations.length > 1) {
+      bartlist = stations
+    }
     res.status(200)
     res.send(bartList)
     res.end()
 
   })
-  app.get('/api/v3/stations', function (req, res) {
+  app.get('/api/v3/stations', async function (req, res) {
+    let statVersion = await db.collection('system').find({_id: "stationHash"}).toArray()
+
+    stationVersion =  statVersion[0].version
+
+    let stations = await db.collection('stations').find().toArray()
+    if (stations.length > 1) {
+      bartlist = stations
+    }
+
     console.log("sent station data v", stationVersion)
     res.status(200)
     res.send({stations: bartList, version: stationVersion})
