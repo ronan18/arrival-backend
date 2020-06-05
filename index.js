@@ -307,13 +307,14 @@ mongo.connect(url, {
     stationVersion =  statVersion[0].version
 
     let stations = await db.collection('stations').find().toArray()
+    console.log(stations)
     if (stations.length > 1) {
       bartlist = stations
     }
 
     console.log("sent station data v", stationVersion)
     res.status(200)
-    res.send({stations: bartList, version: stationVersion})
+    res.send({stations: stations, version: stationVersion})
     res.end()
 
   })
