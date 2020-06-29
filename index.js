@@ -30,7 +30,13 @@ const csv = require('csv-parser');
 var SHA256 = require("crypto-js/sha256");
 agenda.start();
 app.use(compression({filter: shouldCompress}))
-
+function convertiOStoBARTTime (time)  {
+  let momentTime = moment(time, "DD-MM-YYYY hh:mm A").tz("America/Los_Angeles")
+  let bartDate = momentTime.format("MM/DD/YYYY")
+  let bartTime = momentTime.format("h:mm+a")
+  console.log(time, bartDate, bartTime)
+  return {date: bartDate, time: bartTime}
+}
 function getDistanceFromLatLonInKm(lat1, lon1, lat2, lon2) {
   var R = 6371; // Radius of the earth in km
   var dLat = deg2rad(lat2 - lat1);  // deg2rad below
@@ -598,6 +604,99 @@ mongo.connect(url, {
         const user = users[0]
         updateUser(passphrase)
         fetch(`https://api.bart.gov/api/sched.aspx?cmd=depart&orig=${req.params.from}&dest=${req.params.to}&date=now&key=${bartkey}&b=0&a=4&l=1&json=y`).then(bartRes => bartRes.json()).then(async bartRes => {
+          const compiledRes = {
+            trips: bartRes.root.schedule.request.trip
+          }
+          console.log("handeling v3 route request")
+          let routes = {}
+          let x = 0
+          while (x < compiledRes.trips.length) {
+            let trip = compiledRes.trips[x]
+            compiledRes.trips[x].tripId = uuidv4()
+            let i = 0
+            while (i < trip.leg.length) {
+              console.log(x, i, trip.leg[i])
+              let route = trip.leg[i]["@line"]
+
+              let regex = /ROUTE (\d+)/
+              let routeNumber = regex.exec(route)
+              console.log(routeNumber[1], route)
+              let bartRes
+              if (routes[routeNumber[1]]) {
+                bartRes = routes[routeNumber[1]]
+              } else {
+                bartRes = await fetch(`https://api.bart.gov/api/route.aspx?cmd=routeinfo&route=${routeNumber[1]}&key=${bartkey}&json=y`).then(bartRes => bartRes.json())
+                bartRes = bartRes.root.routes.route
+                routes[routeNumber[1]] = bartRes
+                console.log("root aded to databse", routeNumber[1])
+              }
+
+              compiledRes.trips[x].leg[i].route = routeNumber[1]
+              console.log(compiledRes.trips[x].leg[i].route, 'confirmed route at', routeNumber[1], x, i)
+              i++
+            }
+            db.collection("trips").insertOne({
+              _id: compiledRes.trips[x].tripId, trip: compiledRes.trips[x], routes: routes,
+              date: moment.utc().toString()
+            })
+            x++
+            console.log(x, compiledRes.trips.length)
+          }
+
+
+          console.log(x, "sent")
+          // console.log(compiledRes)
+          compiledRes.routes = routes
+          res.status(200)
+          res.send(compiledRes)
+          res.end()
+
+
+        }).catch(err => {
+          console.log(err)
+          res.status(500)
+          res.send({error: {message: 'error fetching from BART API'}})
+          res.end()
+        })
+
+
+      } else {
+        res.status(401)
+        res.send({error: {message: 'User not found'}})
+        res.end()
+      }
+
+    } else {
+      res.status(401)
+      res.send({error: {message: 'no user token'}})
+    }
+
+  })
+  app.post('/api/v4/routes/:from/:to', async function (req, res) {
+    if (req.headers.authorization) {
+      const passphrase = req.headers.authorization
+      //  console.log(passphrase)
+      const users = await db.collection('users').find({_id: passphrase}).toArray()
+      //console.log(users)
+      if (users.length === 1) {
+        const user = users[0]
+        updateUser(passphrase)
+        let cmd = "depart"
+        let time = {
+          time: "now",
+          date: "now"
+        }
+
+        if (req.body.type === "leave") {
+          cmd = "depart"
+          time = convertiOStoBARTTime(req.body.time)
+        }
+        if (req.body.type === "arrive") {
+          cmd = "arrive"
+          time = convertiOStoBARTTime(req.body.time)
+        }
+console.log(time, cmd, req.body, "v4 route request")
+        fetch(`https://api.bart.gov/api/sched.aspx?cmd=${cmd}&orig=${req.params.from}&dest=${req.params.to}&time=${time.time}&date=${time.date}&key=${bartkey}&b=0&a=4&l=1&json=y`).then(bartRes => bartRes.json()).then(async bartRes => {
           const compiledRes = {
             trips: bartRes.root.schedule.request.trip
           }
