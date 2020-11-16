@@ -114,6 +114,7 @@ mongo.connect(url, {
       if (users.length === 1) {
         const user = users[0]
         updateUser(passphrase)
+        agenda.now('log request', {user: passphrase, path:'/api/v2/login', params:req.headers.authorization, time: moment().tz('America/Los_Angeles').format("dddd, MMMM Do YYYY, h:mm:ss a")})
         const userKey = uuidv4()
         db.collection('users').updateOne({_id: passphrase}, {$set: {key: userKey, keyGenerated: Date.now()}})
         //console.log(passphrase, 'loging stuff')
@@ -157,6 +158,8 @@ mongo.connect(url, {
       const users = await db.collection('users').find({_id: passphrase}).toArray()
       // console.log(users)
       if (users.length === 1) {
+        agenda.now('log request', {user: passphrase, path:'/api/v2/siri/login', params:req.headers.authorization, time: moment().tz('America/Los_Angeles').format("dddd, MMMM Do YYYY, h:mm:ss a")})
+
         const user = users[0]
         console.log('login', req.headers.authorization)
         updateUser(passphrase)
@@ -186,6 +189,8 @@ mongo.connect(url, {
         const user = users[0]
         console.log('login', req.headers.authorization, req.body)
         updateUser(passphrase)
+        agenda.now('log request', {user: passphrase, path:'/api/v2/login', params:req.headers.authorization, time: moment().tz('America/Los_Angeles').format("dddd, MMMM Do YYYY, h:mm:ss a")})
+
         const userKey = uuidv4()
         db.collection('users').updateOne({_id: passphrase}, {
           $set: {
@@ -227,6 +232,7 @@ mongo.connect(url, {
       if (users.length === 1) {
         const user = users[0]
         updateUser(req.body.passphrase)
+        agenda.now('log request', {user: req.body.user, path:'/api/v2/fromstationdata', params:req.body.fromStation, time: moment().tz('America/Los_Angeles').format("dddd, MMMM Do YYYY, h:mm:ss a")})
         if (req.body.fromStation) {
           await db.collection('users').updateOne({_id: req.body.user}, {
             $push: {
@@ -263,6 +269,7 @@ mongo.connect(url, {
       // console.log(users)
       if (users.length === 1) {
         const user = users[0]
+        agenda.now('log request', {user: req.body.user, path:'/api/v2/addStationData', params:req.body.toStation, time: moment().tz('America/Los_Angeles').format("dddd, MMMM Do YYYY, h:mm:ss a")})
         updateUser(req.body.passphrase)
         if (req.body.toStation) {
           await db.collection('users').updateOne({_id: req.body.user}, {
@@ -295,6 +302,7 @@ mongo.connect(url, {
   })
   app.get('/api/v2/stations', async function (req, res) {
     let statVersion = await db.collection('system').find({_id: "stationHash"}).toArray()
+    agenda.now('log request', {user: false, path:'/api/v2/stations', params: false, time: moment().tz('America/Los_Angeles').format("dddd, MMMM Do YYYY, h:mm:ss a")})
 
     stationVersion =  statVersion[0].version
 
@@ -311,6 +319,7 @@ mongo.connect(url, {
     let statVersion = await db.collection('system').find({_id: "stationHash"}).toArray()
 
     stationVersion =  statVersion[0].version
+    agenda.now('log request', {user: false, path:'/api/v3/stations', params: false, time: moment().tz('America/Los_Angeles').format("dddd, MMMM Do YYYY, h:mm:ss a")})
 
     let stations = await db.collection('stations').find().toArray()
     console.log(stations)
@@ -327,8 +336,11 @@ mongo.connect(url, {
   app.get('/api/v2/closeststation/:lat/:long', function (req, res) {
     if (req.headers.authorization) {
       const passphrase = req.headers.authorization
+
+
       const lat = req.params.lat
       const long = req.params.long
+      agenda.now('log request', {user: passphrase, path:'/api/v2/closeststation/:lat/:long', params: {lat: lat,long: long}, time: moment().tz('America/Los_Angeles').format("dddd, MMMM Do YYYY, h:mm:ss a")})
       let closestStation = bartList.sort((a, b) => {
         //console.log(getDistanceFromLatLonInKm(position.coords.latitude, position.coords.longitude, a.gtfs_latitude, a.gtfs_longitude), 'position', a.abbr)
         return getDistanceFromLatLonInKm(lat, long, a.gtfs_latitude, a.gtfs_longitude) - getDistanceFromLatLonInKm(lat, long, b.gtfs_latitude, b.gtfs_longitude)
@@ -412,6 +424,8 @@ mongo.connect(url, {
       //console.log(users)
       if (users.length === 1) {
         const user = users[0]
+        agenda.now('log request', {user: passphrase, path:'/api/v3/trains/:from', params: req.params.from, time: moment().tz('America/Los_Angeles').format("dddd, MMMM Do YYYY, h:mm:ss a")})
+
         updateUser(passphrase)
         if (req.body.type === "now") {
           fetch(`https://api.bart.gov/api/etd.aspx?cmd=etd&orig=${req.params.from}&key=${bartkey}&json=y`).then(bartRes => bartRes.json()).then(bartRes => {
@@ -503,6 +517,8 @@ mongo.connect(url, {
       if (users.length === 1) {
         const user = users[0]
         updateUser(passphrase)
+        agenda.now('log request', {user: passphrase, path:'/api/v2/trains/:from', params: req.params.from, time: moment().tz('America/Los_Angeles').format("dddd, MMMM Do YYYY, h:mm:ss a")})
+
         fetch(`https://api.bart.gov/api/etd.aspx?cmd=etd&orig=${req.params.from}&key=${bartkey}&json=y`).then(bartRes => bartRes.json()).then(bartRes => {
           const compiledRes = {
             estimates: bartRes.root.station[0],
@@ -533,6 +549,8 @@ mongo.connect(url, {
   })
   app.post('/api/v2/createaccount', async function (req, res) {
     if (req.body.passphrase) {
+      agenda.now('log request', {user: req.body.passphrase, path:'/api/v2/createaccount', params: false, time: moment().tz('America/Los_Angeles').format("dddd, MMMM Do YYYY, h:mm:ss a")})
+
       await db.collection('users').insertOne({_id: req.body.passphrase, created: Date.now()})
       res.status(200)
       res.send({created: req.body.passphrase, success: true})
@@ -546,6 +564,8 @@ mongo.connect(url, {
   app.get('/api/v3/trip/:tripid', async function (req, res) {
     console.log(req.params.tripid, "trip request")
     const tripRecords = await db.collection('trips').find({_id: req.params.tripid}).toArray()
+    agenda.now('log request', {user: false, path:'/api/v3/trip/:tripid', params: req.params.tripid, time: moment().tz('America/Los_Angeles').format("dddd, MMMM Do YYYY, h:mm:ss a")})
+
     console.log(tripRecords)
     if (tripRecords.length > 0) {
       res.status(200)
@@ -566,6 +586,8 @@ mongo.connect(url, {
       if (users.length === 1) {
         const user = users[0]
         updateUser(passphrase)
+        agenda.now('log request', {user: passphrase, path:'/api/v2/routes/:from/:to', params: req.params, time: moment().tz('America/Los_Angeles').format("dddd, MMMM Do YYYY, h:mm:ss a")})
+
         fetch(`https://api.bart.gov/api/sched.aspx?cmd=depart&orig=${req.params.from}&dest=${req.params.to}&date=now&key=${bartkey}&b=0&a=4&l=1&json=y`).then(bartRes => bartRes.json()).then(bartRes => {
           const compiledRes = {
             trips: bartRes.root.schedule.request.trip
@@ -603,6 +625,8 @@ mongo.connect(url, {
       if (users.length === 1) {
         const user = users[0]
         updateUser(passphrase)
+        agenda.now('log request', {user: passphrase, path:'/api/v3/routes/:from/:to', params: req.params, time: moment().tz('America/Los_Angeles').format("dddd, MMMM Do YYYY, h:mm:ss a")})
+
         fetch(`https://api.bart.gov/api/sched.aspx?cmd=depart&orig=${req.params.from}&dest=${req.params.to}&date=now&key=${bartkey}&b=0&a=4&l=1&json=y`).then(bartRes => bartRes.json()).then(async bartRes => {
           const compiledRes = {
             trips: bartRes.root.schedule.request.trip
@@ -681,6 +705,8 @@ mongo.connect(url, {
       if (users.length === 1) {
         const user = users[0]
         updateUser(passphrase)
+        agenda.now('log request', {user: passphrase, path:'/api/v4/routes/:from/:to', params: {params:req.params, body: req.body}, time: moment().tz('America/Los_Angeles').format("dddd, MMMM Do YYYY, h:mm:ss a")})
+
         let cmd = "depart"
         let time = {
           time: "now",

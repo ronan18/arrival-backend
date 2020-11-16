@@ -65,7 +65,11 @@ mongo.connect(url, {
     return
   }
   const db = client.db('arrival-db')
-
+agenda.define("log request", async job => {
+  console.log("logging request", job.attrs.data)
+  const data = job.attrs.data
+  await db.collection('logs').insertOne({time: data.time, user: data.user, path: data.path, params: data.params})
+})
   agenda.define('run to ai', async job => {
     console.log('running to ai', job.attrs.data.user)
     const user = job.attrs.data.user
