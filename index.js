@@ -319,10 +319,12 @@ mongo.connect(url, {
     let statVersion = await db.collection('system').find({_id: "stationHash"}).toArray()
 
     stationVersion =  statVersion[0].version
-    agenda.now('log request', {user: false, path:'/api/v3/stations', params: false, time: moment().tz('America/Los_Angeles').format("dddd, MMMM Do YYYY, h:mm:ss a")})
+    agenda.now('log request', {user: false, path:'/api/v3/stations', params: false, time: moment().tz('America/Los_Angeles').format("dddd, MMMM Do YYYY, h:mm:ss a")}).then(res => {
+      //console.log(res, "agenda add result")
+    })
 
     let stations = await db.collection('stations').find().toArray()
-    console.log(stations)
+    //console.log(stations)
     if (stations.length > 1) {
       bartlist = stations
     }

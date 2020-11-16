@@ -5,15 +5,16 @@ const http = require('http').createServer(app);
 const cors = require('cors')
 const bodyParser = require('body-parser')
 const mongo = require('mongodb').MongoClient;
-const url = 'mongodb://localhost:27017'
+const keys = require('./private/keys.json');
+const url = keys.mongo.url
 const brain = require('brain.js')
 const moment = require('moment-timezone')
 const serviceAccount = require("./private/firebasekey.json");
 const fetch = require('node-fetch')
 let FieldValue = require('firebase-admin').firestore.FieldValue;
-const agendaUrl = 'mongodb://localhost:27017/arrival-que'
+const agendaUrl = url
 const Agenda = require('agenda')
-const agenda = new Agenda({db: {address: agendaUrl}});
+const agenda = new Agenda({db: {address: agendaUrl, collection: "arrival-que"}});
 
 admin.initializeApp({
   credential: admin.credential.cert(serviceAccount),
@@ -68,7 +69,9 @@ mongo.connect(url, {
 agenda.define("log request", async job => {
   console.log("logging request", job.attrs.data)
   const data = job.attrs.data
-  await db.collection('logs').insertOne({time: data.time, user: data.user, path: data.path, params: data.params})
+  await db.collection('logs').insertOne({time: data.time, user: data.user, path: data.path, params: data.params}).then(res => {
+    console.log("logged")
+  })
 })
   agenda.define('run to ai', async job => {
     console.log('running to ai', job.attrs.data.user)
