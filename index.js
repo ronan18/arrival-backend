@@ -91,7 +91,7 @@ mongo.connect(url, {
   useUnifiedTopology: true
 }, (err, client) => {
   if (err) {
-    console.error(err)
+    console.error(err, "mongo error")
     return
   }
   const db = client.db('arrival-db')
@@ -809,7 +809,7 @@ console.log(time, cmd, req.body, "v4 route request")
       if (users.length === 1) {
         const user = users[0]
         updateUser(passphrase)
-        agenda.now('log request', {user: passphrase, path:'/api/v4/routes/:from/:to', params: {params:req.params, body: req.body}, time: moment().tz('America/Los_Angeles').format("dddd, MMMM Do YYYY, h:mm:ss a")})
+        agenda.now('log request', {user: passphrase, path:'/api/v5/routes/:from/:to', params: {params:req.params, body: req.body}, time: moment().tz('America/Los_Angeles').format("dddd, MMMM Do YYYY, h:mm:ss a")})
 
         let cmd = "depart"
         let time = {
@@ -895,6 +895,63 @@ console.log(time, cmd, req.body, "v4 route request")
     }
 
   })
+  app.get('/api/v5/advisories', async function (req, res) {
+    if (req.headers.authorization) {
+      const passphrase = req.headers.authorization
+      //  console.log(passphrase)
+      const users = await db.collection('users').find({_id: passphrase}).toArray()
+      //console.log(users)
+      if (users.length === 1) {
+        const user = users[0]
+        updateUser(passphrase)
+        agenda.now('log request', {user: passphrase, path:'/api/advisories', params: {params:req.params}, time: moment().tz('America/Los_Angeles').format("dddd, MMMM Do YYYY, h:mm:ss a")})
+
+        fetch(`https://api.bart.gov/api/bsa.aspx?cmd=bsa&key=${bartkey}&json=y`).then(bartRes => bartRes.json()).then(async bartRes => {
+         // console.log(bartRes.root.bsa)
+          console.log(bartRes.root.message)
+          let alerts = bartRes.root.bsa.filter((a)=> {
+            return a.station.length >= 1 || req.headers.verbose == "true"
+          })
+          alerts = alerts.map((a) => {
+            return {
+              station: a.station,
+              description: a.description["#cdata-section"],
+              shortened: a.sms_text["#cdata-section"],
+              raw: a
+            }
+          })
+          console.log(alerts)
+          const compiledRes = {
+            alerts: alerts,
+            message:"" + bartRes.root.message
+          }
+         
+          res.status(200)
+          res.send(compiledRes)
+          res.end()
+
+
+        }).catch(err => {
+          console.log(err)
+          res.status(500)
+          res.send({error: {message: 'error fetching from BART API'}})
+          res.end()
+        })
+
+
+      } else {
+        res.status(401)
+        res.send({error: {message: 'User not found'}})
+        res.end()
+      }
+
+    } else {
+      res.status(401)
+      res.send({error: {message: 'no user token'}})
+    }
+
+  })
+  
   //...
 })
 
