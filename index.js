@@ -917,6 +917,9 @@ console.log(time, cmd, req.body, "v4 route request")
               station: a.station,
               description: a.description["#cdata-section"],
               shortened: a.sms_text["#cdata-section"],
+              type: a.type ? a.type : "noType",
+              id: a["@id"] ? a["@id"] : "noID",
+              posted:a.posted ? a.posted : "noPosted",
               raw: a
             }
           })
