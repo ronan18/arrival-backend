@@ -1,6 +1,15 @@
 {
   "pins" : [
     {
+      "identity" : "arrival-gtfs",
+      "kind" : "remoteSourceControl",
+      "location" : "https://github.com/ronan18/Arrival-GTFS.git",
+      "state" : {
+        "revision" : "b5c2e9b45e941ad1ebc3c2f3833c812b92eb052e",
+        "version" : "0.0.5"
+      }
+    },
+    {
       "identity" : "async-http-client",
       "kind" : "remoteSourceControl",
       "location" : "https://github.com/swift-server/async-http-client.git",
