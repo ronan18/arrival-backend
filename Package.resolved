@@ -5,8 +5,8 @@
       "kind" : "remoteSourceControl",
       "location" : "https://github.com/ronan18/Arrival-GTFS.git",
       "state" : {
-        "revision" : "53b691be01576317f0c9a765683d70af62bb07e7",
-        "version" : "0.0.9"
+        "revision" : "5dbf7123cd6d2e547545fdec62ca2261df9a5676",
+        "version" : "0.0.10"
       }
     },
     {

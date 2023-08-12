@@ -37,6 +37,7 @@ struct RouteController: RouteCollection {
              let newDate = Date(timeIntervalSince1970: time) 
             at = newDate
         }
+            // print(at.bayTime)
       let connections = await agtfs.findPaths(from: fromStation, to: toStation, at: at)
         var trips: [String: Trip] = [:]
         var routes: [String: ArrivalGTFS.Route] = [:]
