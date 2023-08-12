@@ -9,7 +9,7 @@ let package = Package(
     dependencies: [
         // 💧 A server-side Swift web framework.
         .package(url: "https://github.com/vapor/vapor.git", from: "4.77.1"),
-        .package(url: "https://github.com/ronan18/Arrival-GTFS.git", from: .init("0.0.6")!)
+        .package(url: "https://github.com/ronan18/Arrival-GTFS.git", from: .init("0.0.8")!)
         //.package(path: "../Arrival-GTFS"),
     ],
     targets: [
