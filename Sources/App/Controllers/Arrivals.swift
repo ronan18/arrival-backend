@@ -50,7 +50,7 @@ struct ArrivalsControllers: RouteCollection {
             routes[route.routeId] = route
             
         }
-        req.logger.log(level: .info, "req arrials from \(fromStation.stopName) at localtime:\(at.formatted()) baytime:\(at.bayTime) \(stopTimes.count) stop times found in \(Date().timeIntervalSince(time))s")
+        req.logger.log(level: .info, "req arrials from \(fromStation.stopName) at localtime:\(at) baytime:\(at.bayTime) \(stopTimes.count) stop times found in \(Date().timeIntervalSince(time))s")
         print("loaded in", time.timeIntervalSinceNow)
         return ArrivalsResponse(stopTimes: stopTimes, trips:trips, routes: routes, time: at)
     }

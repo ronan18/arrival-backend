@@ -22,6 +22,7 @@ struct RawDataController: RouteCollection {
         
         routes.grouped("v2").get("stoptimes","all", use: stoptimes)
         routes.grouped("v2").get("stoptimes","bytrip", ":tripId", use: stopTimesByTripId)
+        routes.grouped("v2").get("stoptimes","bystop", ":stopId", use: stopTimesByStopId)
         routes.grouped("v2").get("stoptimes", "version", use: stoptimesVersion)
         routes.grouped("v2").get("stoptime", ":id", use: stoptime)
         
@@ -69,6 +70,15 @@ struct RawDataController: RouteCollection {
         
        
             return .init(hash: (agtfs.db.stopTimes.byTripID(tripId) ?? []).hashValue, stopTimes: agtfs.db.stopTimes.byTripID(tripId) ?? [], date: Date())
+        
+    }
+    func stopTimesByStopId(req: Request) async throws -> StopTimesResponse {
+        guard let id = req.parameters.get("stopId") else {
+            throw Abort(.notAcceptable)
+        }
+        
+       
+            return .init(hash: (agtfs.db.stopTimes.byStopID(id) ?? []).hashValue, stopTimes: agtfs.db.stopTimes.byStopID(id) ?? [], date: Date())
         
     }
     func stoptimesVersion(req: Request) async throws -> Int {

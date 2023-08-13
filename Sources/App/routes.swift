@@ -1,9 +1,10 @@
 import Vapor
 import ArrivalGTFS
 func routes(_ app: Application) throws {
-    app.get { req async in
-        req.redirect(to: "https://arrival.city", redirectType: .normal)
-    }
+    app.get("/", use: {req in
+        print("req root")
+        return req.redirect(to: "https://arrival.city", redirectType: .normal)
+    })
 
    
     
