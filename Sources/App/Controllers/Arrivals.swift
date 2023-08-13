@@ -33,6 +33,7 @@ struct ArrivalsControllers: RouteCollection {
              let newDate = Date(timeIntervalSince1970: time) 
             at = newDate
         }
+       
       //  print(at.formatted(), at.bayTime)
         print("init in", time.timeIntervalSinceNow)
         let stopTimes = await agtfs.arrivals(for: fromStation, at: at)
@@ -49,6 +50,7 @@ struct ArrivalsControllers: RouteCollection {
             routes[route.routeId] = route
             
         }
+        req.logger.log(level: .info, "req arrials from \(fromStation.stopName) at localtime:\(at.formatted()) baytime:\(at.bayTime) \(stopTimes.count) stop times found in \(Date().timeIntervalSince(time))s")
         print("loaded in", time.timeIntervalSinceNow)
         return ArrivalsResponse(stopTimes: stopTimes, trips:trips, routes: routes, time: at)
     }
