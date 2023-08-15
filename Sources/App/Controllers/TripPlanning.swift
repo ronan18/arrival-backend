@@ -40,15 +40,14 @@ struct RouteController: RouteCollection {
             // print(at.bayTime)
       let connections = await agtfs.findPaths(from: fromStation, to: toStation, at: at)
         var trips: [String: Trip] = [:]
-        var routes: [String: ArrivalGTFS.Route] = [:]
+       
         var stopTimes: [String: ArrivalGTFS.StopTime] = [:]
         for routePlan in connections {
             for connection in routePlan {
                 guard let trip = agtfs.db.trips.byTripID(connection.tripId) else {continue }
                 trips[connection.tripId] = trip
                
-                guard let route = agtfs.db.routes.byRouteID(trip.routeId) else {continue}
-                routes[route.routeId] = route
+             
                 guard let conStopTimes = agtfs.db.stopTimes.byTripID(trip.tripId) else {
                     continue
                 }
@@ -59,7 +58,7 @@ struct RouteController: RouteCollection {
             }
         }
         
-        return TripResponse(stopTimes: stopTimes, trips:trips, routes: routes, connections: connections, time: at)
+        return TripResponse(stopTimes: stopTimes, trips:trips, connections: connections, time: at)
     }
     func arriveRoute(req: Request) async throws -> TripResponse {
         throw Abort(.notImplemented)

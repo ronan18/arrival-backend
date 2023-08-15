@@ -12,7 +12,7 @@ import ArrivalGTFS
 public struct TripResponse: Content {
     let stopTimes: [String: StopTime]
     let trips: [String: Trip]
-    let routes: [String: ArrivalGTFS.Route]
+   
     let connections: [[Connection]]
     let time: Date
    

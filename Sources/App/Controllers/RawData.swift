@@ -26,7 +26,9 @@ struct RawDataController: RouteCollection {
         routes.grouped("v2").get("stoptimes", "version", use: stoptimesVersion)
         routes.grouped("v2").get("stoptime", ":id", use: stoptime)
         
-        routes.grouped("v2").get("routes", use: routesServer)
+        routes.grouped("v2").get("routes", "all", use: routesServer)
+        routes.grouped("v2").get("routes", "db", use: routesDBServer)
+        routes.grouped("v2").get("routes", "bystopid", ":stoId", use: routesStopId)
         routes.grouped("v2").get("routes", "version", use: routesVersion)
         routes.grouped("v2").get("route", ":id", use: route)
     }
@@ -96,6 +98,17 @@ struct RawDataController: RouteCollection {
     func routesServer(req: Request) async throws -> RoutesResponse {
         return .init(hash: agtfs.db.routes.all.hashValue, routes: agtfs.db.routes.all, date: Date())
     }
+    func routesDBServer(req: Request) async throws -> RoutesDBResponse {
+        
+        return .init(hash: agtfs.db.routes.hashValue, db: agtfs.db.routes, date: Date())
+    }
+    func routesStopId(req: Request) async throws -> RoutesResponse {
+        guard let result = agtfs.db.routes.byStopID(req.parameters.get("stopId") ?? "") else {
+           
+            throw Abort(.notFound)
+        }
+        return .init(hash: result.hashValue, routes: result, date: Date())
+    }
     func routesVersion(req: Request) async throws -> Int {
         return agtfs.db.routes.all.hashValue
     }
@@ -150,5 +163,11 @@ struct RoutesResponse:Content {
 struct RouteResponse:Content {
     let id: String
     let route: ArrivalGTFS.Route
+    let date: Date
+}
+
+struct RoutesDBResponse:Content {
+    let hash: Int
+    let db: ArrivalGTFS.RoutesDB
     let date: Date
 }
