@@ -9,6 +9,7 @@ func routes(_ app: Application) throws {
    
     
     try app.register(collection: RawDataController())
+   // try app.register(collection: HashesController())
     try app.register(collection: RouteController())
     try app.register(collection: ArrivalsControllers())
    // print(app.routes.all)
